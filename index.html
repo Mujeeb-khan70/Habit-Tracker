@@ -443,7 +443,7 @@
       }
     }
 
-    // Friend Lookup Action Filter
+    // Two-Way Automatic Friendship Connection 
     friendSearchBtn.addEventListener('click', async () => {
       const targetQuery = friendSearchInput.value.trim().toLowerCase().replace('@', '');
       searchResultsZone.innerHTML = `<p style='color:#6c7a86;'>Searching platform databases...</p>`;
@@ -461,11 +461,31 @@
         `;
         document.getElementById('add-friend-exec-btn').addEventListener('click', async () => {
           if(!myFriendsList.includes(targetUid)) {
-            myFriendsList.push(targetUid);
-            await saveHabitsToCloud();
-            alert(`@${targetQuery} successfully added to your network!`);
-            friendSearchInput.value = ''; searchResultsZone.innerHTML = '';
-            loadFriendsListUI();
+            try {
+              // 1. Add them to YOUR network list
+              myFriendsList.push(targetUid);
+              await saveHabitsToCloud();
+
+              // 2. Fetch YOUR friend's record array from Firestore
+              const friendSnap = await getDoc(doc(db, "users_habits", targetUid));
+              if(friendSnap.exists()) {
+                const friendData = friendSnap.data();
+                const theirFriendsList = friendData.friends || [];
+                
+                // 3. Inject YOUR active UID into their network document automatically
+                if(!theirFriendsList.includes(currentUser.uid)) {
+                  theirFriendsList.push(currentUser.uid);
+                  await updateDoc(doc(db, "users_habits", targetUid), { friends: theirFriendsList });
+                }
+              }
+
+              alert(`🎉 You and @${targetQuery} are now mutually connected!`);
+              friendSearchInput.value = ''; searchResultsZone.innerHTML = '';
+              loadFriendsListUI();
+            } catch (err) {
+              console.error("Error establishing connection handshake:", err);
+              alert("Could not complete mutual friendship add. Confirm your Firestore rules are updated.");
+            }
           } else { alert("User is already your friend!"); }
         });
       } else { searchResultsZone.innerHTML = `<p style='color:#ea4335;'>User @${targetQuery} not found online.</p>`; }
