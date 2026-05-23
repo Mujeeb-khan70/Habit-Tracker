@@ -5,94 +5,931 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Habit Forge - Masters Edition</title>
   <style>
-    body { background-color: #12161a; color: #f0f3f5; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; justify-content: center; padding: 20px; }
-    .app-container { width: 100%; max-width: 500px; }
-    .auth-card { background-color: #1a2229; padding: 30px; border-radius: 24px; border: 2px solid #28333e; text-align: center; }
-    .auth-group { margin-bottom: 20px; text-align: left; }
-    .auth-input { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #28333e; background-color: #11171d; color: white; box-sizing: border-box; }
-    .error-msg { color: #ff4b4b; font-size: 0.8rem; display: block; margin-top: 5px; height: 1rem; }
-    .auth-btn { width: 100%; background-color: #1cb0f6; color: white; border: none; padding: 14px; border-radius: 12px; cursor: pointer; margin-top: 10px; }
+    body {
+      background-color: #12161a;
+      color: #f0f3f5;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 500px;
+      padding-top: 20px;
+      position: relative;
+    }
+
+    /* Fixed Navigation Header Layout */
+    .top-navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      position: relative;
+    }
+
+    .logo-area .logo {
+      color: #ff9800;
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    /* Modern Dynamic Username Container */
+    .username-container {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-top: 2px;
+    }
+
+    .logo-area .user-handle-text {
+      color: #1cb0f6;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .user-level-badge {
+      font-size: 0.8rem;
+      color: #58cc02;
+      font-weight: bold;
+    }
+
+    .copy-btn {
+      background-color: #28333e;
+      border: 1px solid #374654;
+      color: #a4b3c1;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.2s;
+    }
+    .copy-btn:hover {
+      background-color: #374654;
+      color: white;
+    }
+
+    /* Top-Right Profile Dropdown System */
+    .profile-system { position: relative; }
+    .avatar-btn {
+      width: 42px; height: 42px; border-radius: 50%; background-color: #ff9800; color: #12161a;
+      font-weight: bold; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; border: 2px solid #28333e; box-shadow: 0 4px 12px rgba(0,0,0,0.15); user-select: none;
+    }
+
+    .profile-dropdown {
+      position: absolute; top: 50px; right: 0; background-color: #1a2229; border: 2px solid #28333e;
+      border-radius: 14px; width: 240px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); padding: 12px; z-index: 500;
+    }
+
+    .dropdown-user-info {
+      font-size: 0.85rem; color: #8495a5; word-break: break-all; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #28333e; font-weight: 600;
+    }
+    .dropdown-username-lbl {
+      color: #ff9800;
+      font-weight: 800;
+      font-size: 0.95rem;
+      margin-bottom: 3px;
+    }
+    .dropdown-btn { width: 100%; background-color: transparent; border: 1px solid #ff4b4b; color: #ff4b4b; padding: 8px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.9rem; margin-top: 5px; }
+    .dropdown-btn:hover { background-color: #ff4b4b; color: white; }
+    .dropdown-btn.upgrade-btn { border-color: #58cc02; color: #58cc02; }
+    .dropdown-btn.upgrade-btn:hover { background-color: #58cc02; color: white; }
+
+    /* Auth Card Form Layout */
+    .auth-card {
+      background-color: #1a2229; padding: 30px; border-radius: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); border: 2px solid #28333e; text-align: center;
+    }
+    .auth-card h2 { margin-top: 0; margin-bottom: 20px; font-size: 1.5rem; }
+    .auth-group { margin-bottom: 15px; text-align: left; }
+    .auth-group label { display: block; font-size: 0.85rem; color: #8495a5; margin-bottom: 5px; font-weight: 600; }
+    
+    .auth-input {
+      width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #28333e; background-color: #11171d; color: white; font-size: 1rem; outline: none; box-sizing: border-box;
+    }
+
+    .auth-btn {
+      width: 100%; background-color: #1cb0f6; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 0 #1899d6; margin-top: 10px; margin-bottom: 15px;
+    }
+    .auth-btn.guest-btn { background-color: #4b5a6a; box-shadow: 0 4px 0 #374654; margin-top: 5px; }
+    
+    .auth-toggle-link { color: #1cb0f6; cursor: pointer; font-size: 0.9rem; text-decoration: underline; }
+    .forgot-password-link { display: block; text-align: right; margin-top: 5px; font-size: 0.85rem; color: #a4b3c1; cursor: pointer; text-decoration: underline; }
+
+    /* Navigation Tabs */
+    .view-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+    .tab-btn { 
+      flex: 1; 
+      padding: 14px; 
+      border-radius: 12px; 
+      border: none; 
+      background-color: #1a2229; 
+      color: #8495a5; 
+      font-weight: 700; 
+      font-size: 1.15rem; 
+      cursor: pointer; 
+      transition: 0.2s; 
+      border: 1px solid #28333e; 
+    }
+    .tab-btn.active { background-color: #28333e; color: #ff9800; border-color: #ff9800; }
+
+    /* Shared Action Layouts */
+    .action-panel-card { background-color: #1a2229; padding: 15px; border-radius: 20px; margin-bottom: 25px; border: 1px solid #28333e; }
+    .flex-form { display: flex; flex-direction: column; gap: 12px; }
+    .input-row { display: flex; gap: 10px; }
+    .input-row input[type="text"] { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #28333e; background-color: #11171d; color: white; font-size: 1rem; outline: none; }
+    
+    .meta-selectors { display: flex; gap: 10px; justify-content: space-between; align-items: center; background: #11171d; padding: 8px 12px; border-radius: 10px; border: 1px solid #28333e; }
+    .meta-selectors select { background: #28333e; color: white; border: 1px solid #374654; padding: 6px; border-radius: 6px; outline: none; font-weight: bold; }
+    .toggle-label { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: bold; color: #a4b3c1; cursor: pointer; }
+
+    .submit-action-btn { background-color: #58cc02; color: white; border: none; padding: 0 20px; border-radius: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #46a302; height: 46px; }
+
+    /* Habit Card Layout with Progress Bars */
+    .habit-card { background-color: #1a2229; border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 2px solid #28333e; position: relative; }
+    .habit-card.archived-state { opacity: 0.6; border-style: dashed; }
+    .habit-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .habit-title { font-size: 1.25rem; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 8px; }
+    
+    /* Right Side Status Indicators Cluster */
+    .status-badge-cluster {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .streak-badge { font-size: 1.3rem; font-weight: 800; color: #ff9600; background-color: #2e271d; padding: 4px 12px; border-radius: 12px; display: flex; align-items: center; }
+    .privacy-mini-icon { font-size: 0.95rem; background-color: #232a31; padding: 6px 8px; border-radius: 10px; border: 1px solid #313d4a; display: inline-flex; align-items: center; justify-content: center; }
+    
+    .milestone-container { margin-top: 10px; margin-bottom: 18px; }
+    .milestone-meta { display: flex; justify-content: space-between; font-size: 0.8rem; color: #a4b3c1; margin-bottom: 5px; font-weight: bold; }
+    .progress-track { width: 100%; height: 8px; background-color: #11171d; border-radius: 10px; overflow: hidden; border: 1px solid #252f38; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #ff9800, #ffb74d); width: 0%; border-radius: 10px; transition: width 0.4s ease; }
+    .motivation-msg { font-size: 0.85rem; color: #6c7a86; margin: 0 0 15px 0; }
+
+    .habit-actions { display: flex; gap: 10px; }
+    .habit-actions button { flex: 1; border: none; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 0.9rem; cursor: pointer; }
+    .btn-complete { background-color: #1cb0f6; color: white; box-shadow: 0 4px 0 #1899d6; }
+    .btn-complete.checked { background-color: #58cc02; box-shadow: 0 4px 0 #46a302; }
+    .btn-edit { background-color: #4b5a6a; color: white; border: 1px solid #627284 !important; }
+    .btn-calendar { background-color: #784bc4; color: white; }
+
+    /* Inline Editor Panel */
+    .edit-panel { background: #11171d; padding: 16px; border-radius: 14px; border: 1px solid #28333e; margin-top: 15px; display: flex; flex-direction: column; gap: 12px; }
+    .edit-panel-actions-row { display: flex; gap: 8px; justify-content: space-between; align-items: center; margin-top: 4px; }
+    .edit-panel-danger-zone { display: flex; gap: 6px; }
+    
+    .btn-inline-save { background-color: #58cc02; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
+    .btn-inline-archive { background-color: #d89614; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
+    .btn-inline-delete { background-color: #ea4335; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
+
+    /* Friends Network Elements */
+    .friend-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background-color: #1a2229; border: 1px solid #28333e; margin-bottom: 10px; border-radius: 14px; }
+    .friend-info-block { display: flex; flex-direction: column; gap: 4px; }
+    .friend-name { font-weight: bold; font-size: 1.1rem; color: #fff; }
+    .friend-interactive-zone { display: flex; align-items: center; gap: 10px; }
+    .friend-score { font-weight: 800; color: #ff9800; background-color: #2e271d; padding: 4px 12px; border-radius: 8px; font-size: 0.9rem; }
+    .friend-remove-btn { background-color: #ea4335; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
+    .friend-remove-btn:hover { background-color: #ff5c4d; }
+    .search-result-box { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #11171d; margin-top: 10px; border-radius: 10px; border: 1px solid #28333e; }
+
+    /* Calendar Grid Layout */
+    .calendar-view { margin-top: 15px; background-color: #11171d; padding: 15px; border-radius: 12px; border: 1px solid #28333e; }
+    .calendar-navbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .calendar-nav-btn { background-color: #28333e; color: #f0f3f5; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
+    .calendar-day-label { font-size: 0.75rem; color: #6c7a86; font-weight: bold; }
+    .calendar-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; background-color: #1a2229; color: #526575; border-radius: 6px; }
+    .calendar-cell.completed { background-color: #58cc02; color: white; }
+    .calendar-cell.empty { background-color: transparent; }
+
+    .view-toggle-row { display: flex; justify-content: flex-end; margin-bottom: 12px; padding-right: 5px; }
+    .view-toggle-btn { background: transparent; border: 1px solid #28333e; color: #8495a5; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; font-weight: bold; }
+    .view-toggle-btn.active { border-color: #d89614; color: #d89614; background: #232921; }
+
+    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(10, 14, 18, 0.9); display: flex; justify-content: center; align-items: center; z-index: 2000; }
+    .modal-content { background-color: #1a2229; padding: 35px; border-radius: 28px; text-align: center; border: 3px solid #ff9600; max-width: 340px; }
+    .modal-close-btn { background-color: #58cc02; color: white; border: none; padding: 12px 35px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 15px; }
     .hidden { display: none !important; }
   </style>
 </head>
 <body>
+
   <div class="app-container">
-    <div id="auth-view" class="auth-card">
-      <h2 id="auth-title">Log In</h2>
+    
+    <div class="top-navbar">
+      <div class="logo-area">
+        <div class="logo">🔥 Habit Forge</div>
+        <div class="username-container hidden" id="header-user-badge">
+          <div>
+            <span class="user-handle-text" id="user-display-handle">@username</span>
+            <button class="copy-btn" id="copy-username-btn">Copy 📋</button>
+          </div>
+          <span class="user-level-badge" id="user-display-level">Level 1 Tracker</span>
+        </div>
+      </div>
       
-      <div id="username-register-group" class="auth-group hidden">
-        <label>Username</label>
-        <input type="text" id="auth-username" class="auth-input">
+      <div class="profile-system">
+        <div class="avatar-btn" id="avatar-toggle-btn">?</div>
+        <div class="profile-dropdown hidden" id="avatar-dropdown-box">
+          <div class="dropdown-user-info">
+            <div class="dropdown-username-lbl" id="dropdown-username-txt">@User</div>
+            <div id="dropdown-user-email">Not Signed In</div>
+          </div>
+          <button class="dropdown-btn upgrade-btn hidden" id="dropdown-upgrade-account-btn">🔒 Save Guest Data</button>
+          <button class="dropdown-btn" id="logout-action-btn">Logout</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="auth-view" class="auth-card">
+      <h2 id="auth-title">Log In to Your Account</h2>
+      
+      <div class="auth-group hidden" id="username-register-group">
+        <label>Pick a Unique Username</label>
+        <input type="text" id="auth-username" class="auth-input" placeholder="e.g. habit_master">
       </div>
 
       <div class="auth-group">
-        <label>Email</label>
-        <input type="email" id="auth-email" class="auth-input">
-        <span id="email-error" class="error-msg"></span>
+        <label>Email Address</label>
+        <input type="email" id="auth-email" class="auth-input" placeholder="name@example.com">
       </div>
       
       <div class="auth-group">
         <label>Password</label>
-        <input type="password" id="auth-password" class="auth-input">
-        <span id="password-error" class="error-msg"></span>
+        <input type="password" id="auth-password" class="auth-input" placeholder="••••••••">
+        <span class="forgot-password-link" id="auth-forgot-password-trigger">Forgot Password?</span>
       </div>
 
-      <div id="confirm-password-group" class="auth-group hidden">
+      <div class="auth-group hidden" id="confirm-password-group">
         <label>Confirm Password</label>
-        <input type="password" id="auth-confirm-password" class="auth-input">
-        <span id="confirm-error" class="error-msg"></span>
+        <input type="password" id="auth-confirm-password" class="auth-input" placeholder="••••••••">
       </div>
 
       <button id="auth-submit-btn" class="auth-btn">Sign In</button>
-      <button id="auth-guest-btn" class="auth-btn" style="background:#4b5a6a;">Continue as Guest</button>
-      <p id="auth-toggle-link" style="cursor:pointer; color:#1cb0f6; text-decoration:underline;">Create an account</p>
+      <button id="auth-guest-btn" class="auth-btn guest-btn">Continue as Guest 👤</button>
+      
+      <p><span id="auth-toggle-msg">New to HabitForge?</span> <span id="auth-toggle-link" class="auth-toggle-link">Create an account</span></p>
+    </div>
+
+    <div id="dashboard-view" class="hidden">
+      <div class="view-tabs">
+        <button id="tab-habits" class="tab-btn active">⚡ My Habits</button>
+        <button id="tab-friends" class="tab-btn">👥 Friends</button>
+      </div>
+
+      <div id="panel-habits">
+        <div class="action-panel-card">
+          <form id="habit-form" class="flex-form">
+            <div class="input-row">
+              <input type="text" id="habit-input" placeholder="⚡ Enter new habit..." required>
+              <button type="submit" class="submit-action-btn">Add +</button>
+            </div>
+            <div class="meta-selectors">
+              <div>
+                <select id="habit-emoji-select">
+                  <option value="🎯">🎯 Target</option>
+                  <option value="🏃‍♂️">🏃‍♂️ Fitness</option>
+                  <option value="🧠">🧠 Mind</option>
+                  <option value="💼">💼 Work</option>
+                  <option value="🍏">🍏 Health</option>
+                </select>
+              </div>
+              <label class="toggle-label">
+                <input type="checkbox" id="habit-privacy-check"> Private Habit 🔒
+              </label>
+            </div>
+          </form>
+        </div>
+
+        <div class="view-toggle-row">
+          <button class="view-toggle-btn" id="toggle-archive-view-btn">Show Archived Habits</button>
+        </div>
+
+        <div id="habits-list"></div>
+      </div>
+
+      <div id="panel-friends" class="hidden">
+        <div class="action-panel-card">
+          <h3 style="margin-top:0; margin-bottom:10px;">Find Friends Online</h3>
+          <div class="flex-form">
+            <div class="input-row">
+              <input type="text" id="friend-search-input" placeholder="🔍 Type friend's exact username...">
+              <button id="friend-search-btn" class="submit-action-btn" style="background-color:#784bc4; box-shadow:0 4px 0 #5b3699;">Search</button>
+            </div>
+          </div>
+          <div id="search-results-zone"></div>
+        </div>
+
+        <h3 style="margin-left:5px; margin-bottom:12px; color:#ff9800;">My Friends Network</h3>
+        <div id="friends-list-zone"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="milestone-modal" class="modal hidden">
+    <div class="modal-content">
+      <div style="font-size: 4.5rem; margin-bottom: 12px;">🏆</div>
+      <h2 style="color: #ff9800; margin: 0 0 10px 0; font-size: 1.8rem;">MILESTONE CRUSHED!</h2>
+      <p id="milestone-text" style="color: #f0f3f5; font-size: 1.1rem; line-height: 1.5; margin-bottom: 20px;"></p>
+      <button class="modal-close-btn" onclick="closeModal()">Keep It Up! 🔥</button>
     </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously, linkWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, signInAnonymously, linkWithCredential, EmailAuthProvider, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    const auth = getAuth(initializeApp({ /* Add your config here */ }));
+    const firebaseConfig = {
+      apiKey: "AIzaSyBN1YdLiD9GaxS9b0wvzvPnixYGe7vhjbk",
+      authDomain: "habit-tracker-937ca.firebaseapp.com",
+      projectId: "habit-tracker-937ca",
+      storageBucket: "habit-tracker-937ca.firebasestorage.app",
+      messagingSenderId: "667829126838",
+      appId: "1:667829126838:web:fb5f436362b777e58e0817",
+      measurementId: "G-WCHFVVNZX1"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Dom Binding Registry
+    const authView = document.getElementById('auth-view');
+    const dashboardView = document.getElementById('dashboard-view');
+    const authTitle = document.getElementById('auth-title');
+    const usernameRegisterGroup = document.getElementById('username-register-group');
+    const confirmPasswordGroup = document.getElementById('confirm-password-group');
+    const authUsername = document.getElementById('auth-username');
+    const authEmail = document.getElementById('auth-email');
+    const authPassword = document.getElementById('auth-password');
+    const authConfirmPassword = document.getElementById('auth-confirm-password');
+    const authSubmitBtn = document.getElementById('auth-submit-btn');
+    const authGuestBtn = document.getElementById('auth-guest-btn');
+    const authForgotPswTrigger = document.getElementById('auth-forgot-password-trigger');
+    const authToggleLink = document.getElementById('auth-toggle-link');
+    const authToggleMsg = document.getElementById('auth-toggle-msg');
     
-    // Selectors
-    const emailInput = document.getElementById('auth-email');
-    const passwordInput = document.getElementById('auth-password');
-    const emailError = document.getElementById('email-error');
-    const passwordError = document.getElementById('password-error');
-    const confirmError = document.getElementById('confirm-error');
+    const headerUserBadge = document.getElementById('header-user-badge');
+    const userDisplayHandle = document.getElementById('user-display-handle');
+    const userDisplayLevel = document.getElementById('user-display-level');
+    const copyUsernameBtn = document.getElementById('copy-username-btn');
+    const dropdownUsernameTxt = document.getElementById('dropdown-username-txt');
+    const dropdownUpgradeAccountBtn = document.getElementById('dropdown-upgrade-account-btn');
 
-    // Clear errors on input
-    [emailInput, passwordInput].forEach(el => el.addEventListener('input', () => {
-      emailError.innerText = ""; passwordError.innerText = ""; confirmError.innerText = "";
-    }));
+    const avatarToggleBtn = document.getElementById('avatar-toggle-btn');
+    const avatarDropdownBox = document.getElementById('avatar-dropdown-box');
+    const dropdownUserEmail = document.getElementById('dropdown-user-email');
+    const logoutActionBtn = document.getElementById('logout-action-btn');
 
-    document.getElementById('auth-submit-btn').addEventListener('click', async () => {
-      const email = emailInput.value;
-      const password = passwordInput.value;
+    const tabHabits = document.getElementById('tab-habits');
+    const tabFriends = document.getElementById('tab-friends');
+    const panelHabits = document.getElementById('panel-habits');
+    const panelSocial = document.getElementById('panel-friends');
+
+    const habitForm = document.getElementById('habit-form');
+    const habitInput = document.getElementById('habit-input');
+    const habitEmojiSelect = document.getElementById('habit-emoji-select');
+    const habitPrivacyCheck = document.getElementById('habit-privacy-check');
+    const toggleArchiveViewBtn = document.getElementById('toggle-archive-view-btn');
+    const habitsList = document.getElementById('habits-list');
+
+    const friendSearchInput = document.getElementById('friend-search-input');
+    const friendSearchBtn = document.getElementById('friend-search-btn');
+    const searchResultsZone = document.getElementById('search-results-zone');
+    const friendsListZone = document.getElementById('friends-list-zone');
+
+    const milestoneModal = document.getElementById('milestone-modal');
+    const milestoneText = document.getElementById('milestone-text');
+
+    let habits = [];
+    let currentUser = null;
+    let myUsername = "";
+    let myFriendsList = [];
+    let isLoginMode = true;
+    let showArchivedMode = false;
+
+    const MILESTONE_TIERS = [7, 21, 30, 70, 100, 150, 200, 300, 375, 500, 1000];
+
+    // Tab Navigation
+    tabHabits.addEventListener('click', () => {
+      tabHabits.classList.add('active'); tabFriends.classList.remove('active');
+      panelHabits.classList.remove('hidden'); panelSocial.classList.add('hidden');
+    });
+
+    tabFriends.addEventListener('click', () => {
+      tabFriends.classList.add('active'); tabHabits.classList.remove('active');
+      panelSocial.classList.remove('hidden'); panelHabits.classList.add('hidden');
+      loadFriendsListUI();
+    });
+
+    avatarToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); avatarDropdownBox.classList.toggle('hidden'); });
+    document.addEventListener('click', () => avatarDropdownBox.classList.add('hidden'));
+
+    toggleArchiveViewBtn.addEventListener('click', () => {
+      showArchivedMode = !showArchivedMode;
+      toggleArchiveViewBtn.innerText = showArchivedMode ? "Show Active Habits" : "Show Archived Habits";
+      toggleArchiveViewBtn.classList.toggle('active', showArchivedMode);
+      renderHabits();
+    });
+
+    copyUsernameBtn.addEventListener('click', () => {
+      if(!myUsername || myUsername === "guest") return;
+      navigator.clipboard.writeText(`@${myUsername}`);
+      const baseText = copyUsernameBtn.innerText;
+      copyUsernameBtn.innerText = "Copied! ✓";
+      setTimeout(() => { copyUsernameBtn.innerText = baseText; }, 2000);
+    });
+
+    authToggleLink.addEventListener('click', () => {
+      isLoginMode = !isLoginMode;
+      authTitle.innerText = isLoginMode ? "Log In to Your Account" : "Create Your Free Account";
+      authSubmitBtn.innerText = isLoginMode ? "Sign In" : "Sign Up & Sync";
+      authToggleMsg.innerText = isLoginMode ? "New to HabitForge?" : "Already have an account?";
+      authToggleLink.innerText = isLoginMode ? "Create an account" : "Log in here";
       
-      try {
-        emailError.innerText = ""; passwordError.innerText = "";
-        
-        // Logic for Login vs Register
-        if (isLoginMode) {
-          await signInWithEmailAndPassword(auth, email, password);
-        } else {
-          // If Guest exists, link instead of creating new
-          if (auth.currentUser?.isAnonymous) {
-             await linkWithCredential(auth.currentUser, EmailAuthProvider.credential(email, password));
-          } else {
-             await createUserWithEmailAndPassword(auth, email, password);
-          }
-        }
-      } catch (e) {
-        if (e.code === 'auth/email-already-in-use') emailError.innerText = "Email is already registered.";
-        else if (e.code === 'auth/wrong-password') passwordError.innerText = "Incorrect password.";
-        else if (e.code === 'auth/user-not-found') emailError.innerText = "No account with this email.";
-        else if (e.code === 'auth/invalid-credential') passwordError.innerText = "Invalid credentials.";
-        else alert(e.message);
+      if(isLoginMode) {
+        usernameRegisterGroup.classList.add('hidden');
+        confirmPasswordGroup.classList.add('hidden');
+        authForgotPswTrigger.classList.remove('hidden');
+      } else {
+        usernameRegisterGroup.classList.remove('hidden');
+        confirmPasswordGroup.classList.remove('hidden');
+        authForgotPswTrigger.classList.add('hidden');
       }
     });
+
+    // Password Recovery Flow
+    authForgotPswTrigger.addEventListener('click', async () => {
+      const email = authEmail.value.trim();
+      if(!email) {
+        alert("Please enter your email address first so we know where to send the recovery link.");
+        return;
+      }
+      try {
+        await sendPasswordResetEmail(auth, email);
+        alert(`📬 Secure verification link sent to ${email}. Check your inbox or spam folder to update your password instantly!`);
+      } catch (e) {
+        alert("Could not process password recovery request: " + e.message);
+      }
+    });
+
+    // Guest Authentication Execution
+    authGuestBtn.addEventListener('click', async () => {
+      try {
+        await signInAnonymously(auth);
+      } catch(e) {
+        alert("Guest verification server failed: " + e.message);
+      }
+    });
+
+    // Handle Profile Upgrade Triggering
+    dropdownUpgradeAccountBtn.addEventListener('click', () => {
+      avatarDropdownBox.classList.add('hidden');
+      dashboardView.classList.add('hidden');
+      authView.classList.remove('hidden');
+      
+      // Force panel context to sign-up configuration
+      isLoginMode = false;
+      authTitle.innerText = "Upgrade Guest Account";
+      authSubmitBtn.innerText = "Secure Data & Upgrade";
+      usernameRegisterGroup.classList.remove('hidden');
+      confirmPasswordGroup.classList.remove('hidden');
+      authForgotPswTrigger.classList.add('hidden');
+    });
+
+    authSubmitBtn.addEventListener('click', async () => {
+      const email = authEmail.value.trim(); 
+      const password = authPassword.value;
+      const confirmPassword = authConfirmPassword.value;
+      const username = authUsername.value.trim().toLowerCase().replace('@', '');
+      
+      if (!email || !password) { alert("Please fill out all fields."); return; }
+      if (!isLoginMode) {
+        if(!username) { alert("Please pick a unique username."); return; }
+        if(password !== confirmPassword) { alert("Passwords do not match. Please verify."); return; }
+      }
+
+      try {
+        if (isLoginMode) {
+          // Standard login logic
+          await signInWithEmailAndPassword(auth, email, password);
+        } else {
+          // Check username availability
+          const nameCheck = await getDoc(doc(db, "usernames", username));
+          if(nameCheck.exists()) { alert("Username already taken! Choose another."); return; }
+
+          // Account Conversion / Upgrading Logic
+          if(auth.currentUser && auth.currentUser.isAnonymous) {
+            const credential = EmailAuthProvider.credential(email, password);
+            await linkWithCredential(auth.currentUser, credential);
+            
+            myUsername = username;
+            await setDoc(doc(db, "usernames", username), { uid: auth.currentUser.uid });
+            await saveHabitsToCloud();
+            alert("🎉 Your guest profile and habits have been linked successfully to your new permanent account!");
+          } else {
+            // Standard registration logic if no guest session exists
+            myUsername = username;
+            const credential = await createUserWithEmailAndPassword(auth, email, password);
+            await setDoc(doc(db, "usernames", username), { uid: credential.user.uid });
+            await setDoc(doc(db, "users_habits", credential.user.uid), { habits: [], email: email, username: username, friends: [] });
+          }
+        }
+      } catch (e) { alert(e.message); }
+    });
+
+    logoutActionBtn.addEventListener('click', () => signOut(auth));
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        authView.classList.add('hidden'); 
+        dashboardView.classList.remove('hidden');
+        
+        if(user.isAnonymous) {
+          dropdownUserEmail.innerText = "Guest Session Mode";
+          myUsername = "guest";
+          userDisplayHandle.innerText = "👤 Anonymous Guest";
+          dropdownUsernameTxt.innerText = "Guest Profile";
+          avatarToggleBtn.innerText = "G";
+          copyUsernameBtn.classList.add('hidden');
+          dropdownUpgradeAccountBtn.classList.remove('hidden');
+          headerUserBadge.classList.remove('hidden');
+          renderHabits();
+        } else {
+          dropdownUserEmail.innerText = user.email;
+          copyUsernameBtn.classList.remove('hidden');
+          dropdownUpgradeAccountBtn.classList.add('hidden');
+          await syncLoadHabitsFromCloud();
+        }
+      } else {
+        currentUser = null; habits = []; myFriendsList = []; myUsername = "";
+        avatarToggleBtn.innerText = "?";
+        headerUserBadge.classList.add('hidden');
+        dashboardView.classList.add('hidden'); 
+        authView.classList.remove('hidden');
+      }
+    });
+
+    async function saveHabitsToCloud() {
+      if (!currentUser) return;
+      try {
+        await setDoc(doc(db, "users_habits", currentUser.uid), { 
+          habits: habits, email: currentUser.email || "guest", username: myUsername, friends: myFriendsList 
+        });
+        updateUserLevelDisplay();
+      } catch (error) { console.error("Database sync failed:", error); }
+    }
+
+    function updateUserLevelDisplay() {
+      const score = habits.reduce((acc, h) => acc + (h.history ? h.history.length : 0), 0);
+      const calculatedLevel = Math.floor(score / 15) + 1;
+      userDisplayLevel.innerText = `Level ${calculatedLevel} Tracker (${score} XP)`;
+    }
+
+    async function syncLoadHabitsFromCloud() {
+      if (!currentUser) return;
+      const snap = await getDoc(doc(db, "users_habits", currentUser.uid));
+      if (snap.exists()) {
+        const data = snap.data();
+        habits = data.habits || [];
+        myFriendsList = data.friends || [];
+        myUsername = data.username || "user";
+        
+        userDisplayHandle.innerText = `@${myUsername}`;
+        dropdownUsernameTxt.innerText = `@${myUsername}`;
+        avatarToggleBtn.innerText = myUsername.charAt(0).toUpperCase();
+        headerUserBadge.classList.remove('hidden');
+        
+        habits.forEach(h => {
+          if (h.viewMonth === undefined) h.viewMonth = new Date().getMonth();
+          if (h.viewYear === undefined) h.viewYear = new Date().getFullYear();
+          if (h.emoji === undefined) h.emoji = "🎯";
+          if (h.isPrivate === undefined) h.isPrivate = false;
+          if (h.isArchived === undefined) h.isArchived = false;
+          if (h.showEditor === undefined) h.showEditor = false;
+          h.showAnalytics = false;
+        });
+
+        updateUserLevelDisplay();
+        renderHabits();
+      } else if (currentUser.isAnonymous) {
+        // Fallback initialized for guest tracks
+        updateUserLevelDisplay();
+        renderHabits();
+      }
+    }
+
+    friendSearchBtn.addEventListener('click', async () => {
+      if (currentUser.isAnonymous) { alert("Social networking channels require a verified account profiles. Upgrade to permanent account to unlock!"); return; }
+      
+      const targetQuery = friendSearchInput.value.trim().toLowerCase().replace('@', '');
+      searchResultsZone.innerHTML = `<p style='color:#6c7a86;'>Searching platform databases...</p>`;
+      
+      if(targetQuery === myUsername) { searchResultsZone.innerHTML = `<p style='color:#ea4335;'>You cannot add yourself!</p>`; return; }
+
+      const nameDoc = await getDoc(doc(db, "usernames", targetQuery));
+      if(nameDoc.exists()) {
+        const targetUid = nameDoc.data().uid;
+        searchResultsZone.innerHTML = `
+          <div class="search-result-box">
+            <span style="font-weight:bold; color:white;">✨ @${targetQuery} Found!</span>
+            <button class="submit-action-btn" id="add-friend-exec-btn" style="padding: 6px 14px; height:auto;">Add +</button>
+          </div>
+        `;
+        document.getElementById('add-friend-exec-btn').addEventListener('click', async () => {
+          if(!myFriendsList.includes(targetUid)) {
+            try {
+              myFriendsList.push(targetUid);
+              await saveHabitsToCloud();
+
+              const friendSnap = await getDoc(doc(db, "users_habits", targetUid));
+              if(friendSnap.exists()) {
+                const friendData = friendSnap.data();
+                const theirFriendsList = friendData.friends || [];
+                if(!theirFriendsList.includes(currentUser.uid)) {
+                  theirFriendsList.push(currentUser.uid);
+                  await updateDoc(doc(db, "users_habits", targetUid), { friends: theirFriendsList });
+                }
+              }
+              alert(`🎉 You and ${targetQuery} are now mutually connected!`);
+              friendSearchInput.value = ''; searchResultsZone.innerHTML = '';
+              loadFriendsListUI();
+            } catch (err) { alert("Could not complete friendship connection."); }
+          } else { alert("User is already your friend!"); }
+        });
+      } else { searchResultsZone.innerHTML = `<p style='color:#ea4335;'>User @${targetQuery} not found online.</p>`; }
+    });
+
+    async function loadFriendsListUI() {
+      if (currentUser.isAnonymous) {
+        friendsListZone.innerHTML = `<p style="color:#6c7a86; text-align:center; padding:10px;">⚠️ Friends panel requires upgrading from a guest profile.</p>`;
+        return;
+      }
+      friendsListZone.innerHTML = `<p style="color:#6c7a86; text-align:center;">Syncing live tracking channels...</p>`;
+      if(myFriendsList.length === 0) {
+        friendsListZone.innerHTML = `<p style="color:#6c7a86; text-align:center;">Your friends network is currently empty.</p>`;
+        return;
+      }
+      friendsListZone.innerHTML = '';
+      
+      for (let friendUid of myFriendsList) {
+        const friendSnap = await getDoc(doc(db, "users_habits", friendUid));
+        if(friendSnap.exists()) {
+          const fData = friendSnap.data();
+          const fName = fData.username || "Anonymous";
+          const fHabits = fData.habits || [];
+          
+          const aggregateScore = fHabits.reduce((acc, h) => {
+            if(h.isPrivate) return acc;
+            return acc + (h.history ? h.history.length : 0);
+          }, 0);
+          
+          const row = document.createElement('div');
+          row.className = 'friend-row';
+          row.innerHTML = `
+            <div class="friend-info-block">
+              <span class="friend-name">👤 ${fName}</span>
+            </div>
+            <div class="friend-interactive-zone">
+              <span class="friend-score">🔥 ${aggregateScore} pts</span>
+              <button class="friend-remove-btn" id="rmv-${friendUid}">Remove ×</button>
+            </div>
+          `;
+          friendsListZone.appendChild(row);
+          document.getElementById(`rmv-${friendUid}`).addEventListener('click', () => removeFriendTwoWay(friendUid, fName));
+        }
+      }
+    }
+
+    async function removeFriendTwoWay(targetUid, targetName) {
+      if(!confirm(`Remove ${targetName} from your friends network?`)) return;
+      try {
+        myFriendsList = myFriendsList.filter(uid => uid !== targetUid);
+        await saveHabitsToCloud();
+        const friendSnap = await getDoc(doc(db, "users_habits", targetUid));
+        if(friendSnap.exists()) {
+          let theirFriendsList = friendSnap.data().friends || [];
+          theirFriendsList = theirFriendsList.filter(uid => uid !== currentUser.uid);
+          await updateDoc(doc(db, "users_habits", targetUid), { friends: theirFriendsList });
+        }
+        alert(`Removed connection with ${targetName}.`);
+        loadFriendsListUI();
+      } catch (err) { alert("Failed to disconnect cleanly."); }
+    }
+
+    habitForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = habitInput.value.trim();
+      const selectedEmoji = habitEmojiSelect.value;
+      const privacySetting = habitPrivacyCheck.checked;
+
+      const newHabit = {
+        id: Date.now(), name: text, streak: 0, lastCompleted: null, history: [],
+        showCalendar: false, showAnalytics: false, showEditor: false,
+        emoji: selectedEmoji, isPrivate: privacySetting, isArchived: false,
+        viewMonth: new Date().getMonth(), viewYear: new Date().getFullYear()
+      };
+      habits.push(newHabit); 
+      habitInput.value = ''; habitPrivacyCheck.checked = false;
+      renderHabits(); saveHabitsToCloud();
+    });
+
+    function getMilestoneMetrics(streak) {
+      let currentTarget = MILESTONE_TIERS[0];
+      for (let i = 0; i < MILESTONE_TIERS.length; i++) {
+        if (streak < MILESTONE_TIERS[i]) { currentTarget = MILESTONE_TIERS[i]; break; }
+      }
+      return { target: currentTarget, percentage: Math.min((streak / currentTarget) * 100, 100) };
+    }
+
+    function renderHabits() {
+      habitsList.innerHTML = '';
+      const today = new Date().setHours(0,0,0,0);
+      const oneDayInMs = 24 * 60 * 60 * 1000;
+
+      const filteredHabits = habits.filter(h => h.isArchived === showArchivedMode);
+
+      if(filteredHabits.length === 0) {
+        habitsList.innerHTML = `<p style="text-align:center; color:#6c7a86; padding: 20px;">No habits found here.</p>`;
+        return;
+      }
+
+      filteredHabits.forEach(habit => {
+        let statusMessage = "Keep up the work! 🌱";
+        if (habit.lastCompleted) {
+          const daysPassed = Math.floor((today - new Date(habit.lastCompleted).setHours(0,0,0,0)) / oneDayInMs);
+          if (daysPassed === 1) statusMessage = "⚠️ Missed yesterday! Log it today to keep the streak alive.";
+          else if (daysPassed > 1) { habit.streak = 0; statusMessage = "Streak reset. Let's build it back up!"; }
+          else if (daysPassed === 0) statusMessage = "✅ Logged for today!";
+        }
+
+        const isDoneToday = habit.lastCompleted && new Date(habit.lastCompleted).setHours(0,0,0,0) === today;
+        const metrics = getMilestoneMetrics(habit.streak);
+        const privacyIconText = habit.isPrivate ? '🔒' : '🌐';
+
+        const card = document.createElement('div');
+        card.className = `habit-card ${habit.isArchived ? 'archived-state':''}`;
+        card.innerHTML = `
+          <div class="habit-header">
+            <span class="habit-title">
+              <span>${habit.emoji || '🎯'}</span> ${habit.name}
+            </span>
+            <div class="status-badge-cluster">
+              <span class="streak-badge">🔥 ${habit.streak}</span>
+              <span class="privacy-mini-icon">${privacyIconText}</span>
+            </div>
+          </div>
+          <div class="milestone-container">
+            <div class="milestone-meta"><span>📊 ${habit.streak} Completed</span><span style="color:#ff9800;">Target: ${metrics.target} Days</span></div>
+            <div class="progress-track"><div class="progress-fill" style="width:${metrics.percentage}%;"></div></div>
+          </div>
+          <p class="motivation-msg">${statusMessage}</p>
+          <div class="habit-actions">
+            <button class="${isDoneToday ? 'btn-complete checked':'btn-complete'}" id="comp-${habit.id}">${isDoneToday ? '✓ Done':'Complete'}</button>
+            <button class="btn-calendar" id="cal-${habit.id}">📅 Calendar</button>
+            <button class="btn-edit" id="edt-${habit.id}">✏️ Edit</button>
+          </div>
+          <div id="edt-box-${habit.id}"></div>
+          <div id="cal-box-${habit.id}"></div>
+        `;
+        habitsList.appendChild(card);
+
+        document.getElementById(`comp-${habit.id}`).addEventListener('click', () => toggleCompleteHabit(habit.id));
+        document.getElementById(`edt-${habit.id}`).addEventListener('click', () => toggleEditorPanel(habit.id));
+        document.getElementById(`cal-${habit.id}`).addEventListener('click', () => toggleCalendar(habit.id));
+
+        if (habit.showEditor) renderEditorPanel(habit);
+        if (habit.showCalendar) renderCalendarPanel(habit);
+      });
+    }
+
+    function toggleEditorPanel(id) {
+      const h = habits.find(x => x.id === id);
+      h.showEditor = !h.showEditor;
+      renderHabits();
+    }
+
+    function renderEditorPanel(h) {
+      const targetDiv = document.getElementById(`edt-box-${h.id}`);
+      targetDiv.innerHTML = `
+        <div class="edit-panel">
+          <input type="text" id="edit-name-${h.id}" class="auth-input" value="${h.name}" style="padding:10px; font-size:0.95rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+            <select id="edit-emoji-${h.id}" style="background:#28333e; color:white; padding:8px; border-radius:6px; border:1px solid #374654; font-weight:bold;">
+              <option value="🎯" ${h.emoji === '🎯' ? 'selected':''}>🎯 Target</option>
+              <option value="🏃‍♂️" ${h.emoji === '🏃‍♂️' ? 'selected':''}>🏃‍♂️ Fitness</option>
+              <option value="🧠" ${h.emoji === '🧠' ? 'selected':''}>🧠 Mind</option>
+              <option value="💼" ${h.emoji === '💼' ? 'selected':''}>💼 Work</option>
+              <option value="🍏" ${h.emoji === '🍏' ? 'selected':''}>🍏 Health</option>
+            </select>
+            <label class="toggle-label">
+              <input type="checkbox" id="edit-privacy-${h.id}" ${h.isPrivate ? 'checked':''}> Private 🔒
+            </label>
+          </div>
+          <div class="edit-panel-actions-row">
+            <div class="edit-panel-danger-zone">
+              <button class="btn-inline-archive" id="arch-exec-${h.id}">${h.isArchived ? '🎒 Unarchive' : '🎒 Archive'}</button>
+              <button class="btn-inline-delete" id="del-exec-${h.id}">❌ Delete</button>
+            </div>
+            <button class="btn-inline-save" id="edit-save-${h.id}">Save Changes ✓</button>
+          </div>
+        </div>
+      `;
+
+      document.getElementById(`edit-save-${h.id}`).addEventListener('click', () => {
+        h.name = document.getElementById(`edit-name-${h.id}`).value.trim();
+        h.emoji = document.getElementById(`edit-emoji-${h.id}`).value;
+        h.isPrivate = document.getElementById(`edit-privacy-${h.id}`).checked;
+        h.showEditor = false;
+        renderHabits();
+        saveHabitsToCloud();
+      });
+
+      document.getElementById(`arch-exec-${h.id}`).addEventListener('click', () => {
+        h.isArchived = !h.isArchived;
+        h.showEditor = false;
+        renderHabits();
+        saveHabitsToCloud();
+      });
+
+      document.getElementById(`del-exec-${h.id}`).addEventListener('click', () => {
+        if(confirm("Delete habit permanently?")) {
+          habits = habits.filter(x => x.id !== h.id);
+          renderHabits();
+          saveHabitsToCloud();
+        }
+      });
+    }
+
+    function toggleCompleteHabit(id) {
+      const habit = habits.find(h => h.id === id); if (!habit) return;
+      const todayObj = new Date();
+      const formattedToday = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
+      const doneToday = habit.lastCompleted && new Date(habit.lastCompleted).setHours(0,0,0,0) === todayObj.setHours(0,0,0,0);
+
+      if (doneToday) {
+        if (habit.streak > 0) habit.streak -= 1;
+        habit.history = habit.history.filter(d => d !== formattedToday);
+        habit.lastCompleted = habit.history.length > 0 ? new Date(habit.history.sort().reverse()[0]).getTime() : null;
+      } else {
+        habit.streak += 1; habit.lastCompleted = Date.now();
+        if (!habit.history.includes(formattedToday)) habit.history.push(formattedToday);
+        if (MILESTONE_TIERS.includes(habit.streak)) triggerMilestoneCelebration(habit.name, habit.streak);
+      }
+      renderHabits(); saveHabitsToCloud();
+    }
+
+    function triggerMilestoneCelebration(name, val) {
+      milestoneText.innerHTML = `Focus unlocked! You logged <strong>"${name}"</strong> for <strong>${val} days</strong> straight!`;
+      milestoneModal.classList.remove('hidden');
+    }
+
+    function toggleCalendar(id) { const h = habits.find(x => x.id === id); h.showCalendar = !h.showCalendar; renderHabits(); }
+    function renderCalendarPanel(habit) {
+      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      const totalDays = new Date(habit.viewYear, habit.viewMonth + 1, 0).getDate();
+      const firstDay = new Date(habit.viewYear, habit.viewMonth, 1).getDay();
+      const totalLogs = habit.history ? habit.history.length : 0;
+      
+      document.getElementById(`cal-box-${habit.id}`).innerHTML = `
+        <div class="calendar-view">
+          <div class="calendar-navbar">
+            <button class="calendar-nav-btn" id="prev-${habit.id}">◀</button>
+            <strong style="font-size:0.95rem;">${monthNames[habit.viewMonth]} ${habit.viewYear}</strong>
+            <button class="calendar-nav-btn" id="next-${habit.id}">▶</button>
+          </div>
+          <div class="calendar-grid" id="grid-${habit.id}"></div>
+          <div style="margin-top: 12px; font-size: 0.8rem; font-weight: bold; color: #a4b3c1; text-align: center; border-top: 1px solid #28333e; padding-top: 8px;">
+            📊 Total Lifetime Logs for this habit: <span style="color:#ff9800; font-size:0.9rem;">${totalLogs}</span>
+          </div>
+        </div>`;
+
+      const grid = document.getElementById(`grid-${habit.id}`);
+      ['S','M','T','W','T','F','S'].forEach(d => grid.innerHTML += `<div class="calendar-day-label">${d}</div>`);
+      for(let i=0; i<firstDay; i++) grid.innerHTML += `<div class="calendar-cell empty"></div>`;
+      for(let d=1; d<=totalDays; d++) {
+        const dStr = `${habit.viewYear}-${String(habit.viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        grid.innerHTML += `<div class="calendar-cell ${habit.history.includes(dStr) ? 'completed':''}">${d}</div>`;
+      }
+      document.getElementById(`prev-${habit.id}`).addEventListener('click', () => changeMonth(habit.id, -1));
+      document.getElementById(`next-${habit.id}`).addEventListener('click', () => changeMonth(habit.id, 1));
+    }
+
+    function changeMonth(id, delta) {
+      const h = habits.find(x => x.id === id); h.viewMonth += delta;
+      if (h.viewMonth > 11) { h.viewMonth = 0; h.viewYear++; }
+      else if (h.viewMonth < 0) { h.viewMonth = 11; h.viewYear--; }
+      renderHabits();
+    }
+
+    window.closeModal = function() { milestoneModal.classList.add('hidden'); }
   </script>
 </body>
 </html>
