@@ -1,7 +1,265 @@
-<script type="module">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Habit Forge - Friends Network Pro</title>
+  <style>
+    body {
+      background-color: #12161a;
+      color: #f0f3f5;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 500px;
+      padding-top: 20px;
+      position: relative;
+    }
+
+    /* Fixed Navigation Header Layout */
+    .top-navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      position: relative;
+    }
+
+    .logo-area .logo {
+      color: #ff9800;
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    /* Modern Dynamic Username Container */
+    .username-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .logo-area .user-handle-text {
+      color: #1cb0f6;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .copy-btn {
+      background-color: #28333e;
+      border: 1px solid #374654;
+      color: #a4b3c1;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.2s;
+    }
+    .copy-btn:hover {
+      background-color: #374654;
+      color: white;
+    }
+
+    /* Top-Right Profile Dropdown System */
+    .profile-system { position: relative; }
+    .avatar-btn {
+      width: 42px; height: 42px; border-radius: 50%; background-color: #ff9800; color: #12161a;
+      font-weight: bold; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; border: 2px solid #28333e; box-shadow: 0 4px 12px rgba(0,0,0,0.15); user-select: none;
+    }
+
+    .profile-dropdown {
+      position: absolute; top: 50px; right: 0; background-color: #1a2229; border: 2px solid #28333e;
+      border-radius: 14px; width: 220px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); padding: 12px; z-index: 500;
+    }
+
+    .dropdown-user-info {
+      font-size: 0.85rem; color: #8495a5; word-break: break-all; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #28333e; font-weight: 600;
+    }
+    .dropdown-username-lbl {
+      color: #ff9800;
+      font-weight: 800;
+      font-size: 0.95rem;
+      margin-bottom: 3px;
+    }
+    .dropdown-btn { width: 100%; background-color: transparent; border: 1px solid #ff4b4b; color: #ff4b4b; padding: 8px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
+    .dropdown-btn:hover { background-color: #ff4b4b; color: white; }
+
+    /* Auth Card Form Layout */
+    .auth-card {
+      background-color: #1a2229; padding: 30px; border-radius: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); border: 2px solid #28333e; text-align: center;
+    }
+    .auth-card h2 { margin-top: 0; margin-bottom: 20px; font-size: 1.5rem; }
+    .auth-group { margin-bottom: 15px; text-align: left; }
+    .auth-group label { display: block; font-size: 0.85rem; color: #8495a5; margin-bottom: 5px; font-weight: 600; }
+    
+    .auth-input {
+      width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #28333e; background-color: #11171d; color: white; font-size: 1rem; outline: none; box-sizing: border-box;
+    }
+
+    .auth-btn {
+      width: 100%; background-color: #1cb0f6; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 0 #1899d6; margin-top: 10px; margin-bottom: 15px;
+    }
+    .auth-toggle-link { color: #1cb0f6; cursor: pointer; font-size: 0.9rem; text-decoration: underline; }
+
+    /* Navigation Tabs */
+    .view-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+    .tab-btn { flex: 1; padding: 12px; border-radius: 12px; border: none; background-color: #1a2229; color: #8495a5; font-weight: bold; cursor: pointer; transition: 0.2s; border: 1px solid #28333e; }
+    .tab-btn.active { background-color: #28333e; color: #ff9800; border-color: #ff9800; }
+
+    /* Shared Action Layouts */
+    .action-panel-card { background-color: #1a2229; padding: 15px; border-radius: 20px; margin-bottom: 25px; border: 1px solid #28333e; }
+    .flex-form { display: flex; gap: 10px; }
+    .flex-form input[type="text"] { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #28333e; background-color: #11171d; color: white; font-size: 1rem; outline: none; }
+    .submit-action-btn { background-color: #58cc02; color: white; border: none; padding: 0 20px; border-radius: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #46a302; }
+
+    /* Habit Card Layout with Progress Bars */
+    .habit-card { background-color: #1a2229; border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 2px solid #28333e; }
+    .habit-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .habit-title { font-size: 1.25rem; font-weight: 700; color: #ffffff; }
+    .streak-badge { font-size: 1.3rem; font-weight: 800; color: #ff9600; background-color: #2e271d; padding: 4px 12px; border-radius: 12px; }
+    
+    .milestone-container { margin-top: 10px; margin-bottom: 18px; }
+    .milestone-meta { display: flex; justify-content: space-between; font-size: 0.8rem; color: #a4b3c1; margin-bottom: 5px; font-weight: bold; }
+    .progress-track { width: 100%; height: 8px; background-color: #11171d; border-radius: 10px; overflow: hidden; border: 1px solid #252f38; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #ff9800, #ffb74d); width: 0%; border-radius: 10px; transition: width 0.4s ease; }
+    .motivation-msg { font-size: 0.85rem; color: #6c7a86; margin: 0 0 15px 0; }
+
+    .habit-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .habit-actions button { flex: 1; min-width: 70px; border: none; padding: 10px; border-radius: 10px; font-weight: bold; font-size: 0.85rem; cursor: pointer; }
+    .btn-complete { background-color: #1cb0f6; color: white; box-shadow: 0 4px 0 #1899d6; }
+    .btn-complete.checked { background-color: #58cc02; box-shadow: 0 4px 0 #46a302; }
+    .btn-analytics { background-color: #ff9800; color: white; }
+    .btn-calendar { background-color: #784bc4; color: white; }
+    .btn-delete { background-color: #ea4335; color: white; }
+
+    /* Analytics Panel Styles */
+    .analytics-panel { margin-top: 15px; background-color: #11171d; padding: 15px; border-radius: 12px; border: 1px solid #28333e; }
+    .analytics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; text-align: center; margin-top: 10px; }
+    .metric-box { background-color: #1a2229; padding: 10px; border-radius: 8px; border: 1px solid #28333e; }
+    .metric-val { font-size: 1.2rem; font-weight: bold; color: #1cb0f6; }
+    .metric-lbl { font-size: 0.75rem; color: #6c7a86; text-transform: uppercase; margin-top: 3px; }
+
+    /* Friends Network Elements */
+    .friend-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background-color: #1a2229; border: 1px solid #28333e; margin-bottom: 10px; border-radius: 14px; }
+    .friend-name { font-weight: bold; font-size: 1.1rem; color: #fff; }
+    .friend-score { font-weight: 800; color: #ff9800; background-color: #2e271d; padding: 4px 12px; border-radius: 8px; }
+    .search-result-box { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #11171d; margin-top: 10px; border-radius: 10px; border: 1px solid #28333e; }
+
+    /* Calendar Grid Layout */
+    .calendar-view { margin-top: 15px; background-color: #11171d; padding: 15px; border-radius: 12px; border: 1px solid #28333e; }
+    .calendar-navbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .calendar-nav-btn { background-color: #28333e; color: #f0f3f5; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
+    .calendar-day-label { font-size: 0.75rem; color: #6c7a86; font-weight: bold; }
+    .calendar-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; background-color: #1a2229; color: #526575; border-radius: 6px; }
+    .calendar-cell.completed { background-color: #58cc02; color: white; }
+    .calendar-cell.empty { background-color: transparent; }
+
+    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(10, 14, 18, 0.9); display: flex; justify-content: center; align-items: center; z-index: 2000; }
+    .modal-content { background-color: #1a2229; padding: 35px; border-radius: 28px; text-align: center; border: 3px solid #ff9600; max-width: 340px; }
+    .modal-close-btn { background-color: #58cc02; color: white; border: none; padding: 12px 35px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <div class="top-navbar">
+      <div class="logo-area">
+        <div class="logo">🔥 Habit Forge</div>
+        <div class="username-container hidden" id="header-user-badge">
+          <span class="user-handle-text" id="user-display-handle">@username</span>
+          <button class="copy-btn" id="copy-username-btn">Copy 📋</button>
+        </div>
+      </div>
+      
+      <div class="profile-system">
+        <div class="avatar-btn" id="avatar-toggle-btn">?</div>
+        <div class="profile-dropdown hidden" id="avatar-dropdown-box">
+          <div class="dropdown-user-info">
+            <div class="dropdown-username-lbl" id="dropdown-username-txt">@User</div>
+            <div id="dropdown-user-email">Not Signed In</div>
+          </div>
+          <button class="dropdown-btn" id="logout-action-btn">Logout</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="auth-view" class="auth-card">
+      <h2 id="auth-title">Log In to Your Account</h2>
+      
+      <div class="auth-group hidden" id="username-register-group">
+        <label>Pick a Unique Username</label>
+        <input type="text" id="auth-username" class="auth-input" placeholder="e.g. habit_master">
+      </div>
+
+      <div class="auth-group">
+        <label>Email Address</label>
+        <input type="email" id="auth-email" class="auth-input" placeholder="name@example.com">
+      </div>
+      <div class="auth-group">
+        <label>Password</label>
+        <input type="password" id="auth-password" class="auth-input" placeholder="••••••••">
+      </div>
+      <button id="auth-submit-btn" class="auth-btn">Sign In</button>
+      <p><span id="auth-toggle-msg">New to HabitForge?</span> <span id="auth-toggle-link" class="auth-toggle-link">Create an account</span></p>
+    </div>
+
+    <div id="dashboard-view" class="hidden">
+      <div class="view-tabs">
+        <button id="tab-habits" class="tab-btn active">⚡ My Habits</button>
+        <button id="tab-friends" class="tab-btn">👥 Friends</button>
+      </div>
+
+      <div id="panel-habits">
+        <div class="action-panel-card">
+          <form id="habit-form" class="flex-form">
+            <input type="text" id="habit-input" placeholder="⚡ Enter new habit..." required>
+            <button type="submit" class="submit-action-btn">Add +</button>
+          </form>
+        </div>
+        <div id="habits-list"></div>
+      </div>
+
+      <div id="panel-friends" class="hidden">
+        <div class="action-panel-card">
+          <h3 style="margin-top:0; margin-bottom:10px;">Find Friends Online</h3>
+          <div class="flex-form">
+            <input type="text" id="friend-search-input" placeholder="🔍 Type friend's exact username...">
+            <button id="friend-search-btn" class="submit-action-btn" style="background-color:#784bc4; box-shadow:0 4px 0 #5b3699;">Search</button>
+          </div>
+          <div id="search-results-zone"></div>
+        </div>
+
+        <h3 style="margin-left:5px; margin-bottom:12px; color:#ff9800;">My Friends Network</h3>
+        <div id="friends-list-zone"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="milestone-modal" class="modal hidden">
+    <div class="modal-content">
+      <div style="font-size: 4.5rem; margin-bottom: 12px;">🏆</div>
+      <h2 style="color: #ff9800; margin: 0 0 10px 0; font-size: 1.8rem;">MILESTONE CRUSHED!</h2>
+      <p id="milestone-text" style="color: #f0f3f5; font-size: 1.1rem; line-height: 1.5; margin-bottom: 20px;"></p>
+      <button class="modal-close-btn" onclick="closeModal()">Keep It Up! 🔥</button>
+    </div>
+  </div>
+
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBN1YdLiD9GaxS9b0wvzvPnixYGe7vhjbk",
@@ -17,7 +275,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Structural Bindings
+    // Dom Binding Registry
     const authView = document.getElementById('auth-view');
     const dashboardView = document.getElementById('dashboard-view');
     const authTitle = document.getElementById('auth-title');
@@ -29,7 +287,6 @@
     const authToggleLink = document.getElementById('auth-toggle-link');
     const authToggleMsg = document.getElementById('auth-toggle-msg');
     
-    // Header Refactor Binding Points
     const headerUserBadge = document.getElementById('header-user-badge');
     const userDisplayHandle = document.getElementById('user-display-handle');
     const copyUsernameBtn = document.getElementById('copy-username-btn');
@@ -65,7 +322,7 @@
 
     const MILESTONE_TIERS = [7, 21, 30, 70, 100, 150, 200, 300, 375, 500, 1000];
 
-    // Navigation Tabs Controller
+    // Tab Channel Navigation
     tabHabits.addEventListener('click', () => {
       tabHabits.classList.add('active'); tabFriends.classList.remove('active');
       panelHabits.classList.remove('hidden'); panelSocial.classList.add('hidden');
@@ -80,16 +337,16 @@
     avatarToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); avatarDropdownBox.classList.toggle('hidden'); });
     document.addEventListener('click', () => avatarDropdownBox.classList.add('hidden'));
 
-    // Copy Action Helper Function
+    // Text Copy Action Handler
     copyUsernameBtn.addEventListener('click', () => {
-      if(!myUsername) return;
+      if(!myUsername || myUsername === "user") return;
       navigator.clipboard.writeText(`@${myUsername}`);
       const baseText = copyUsernameBtn.innerText;
       copyUsernameBtn.innerText = "Copied! ✓";
       setTimeout(() => { copyUsernameBtn.innerText = baseText; }, 2000);
     });
 
-    // Toggle Login / Signup View
+    // Form Toggle View Controller
     authToggleLink.addEventListener('click', () => {
       isLoginMode = !isLoginMode;
       authTitle.innerText = isLoginMode ? "Log In to Your Account" : "Create Your Free Account";
@@ -100,7 +357,7 @@
       else usernameRegisterGroup.classList.remove('hidden');
     });
 
-    // Unified Authentication Click Trigger
+    // Sync Authentication Trigger Action
     authSubmitBtn.addEventListener('click', async () => {
       const email = authEmail.value.trim(); const password = authPassword.value;
       const username = authUsername.value.trim().toLowerCase().replace('@', '');
@@ -115,7 +372,6 @@
           const nameCheck = await getDoc(doc(db, "usernames", username));
           if(nameCheck.exists()) { alert("Username already taken! Choose another."); return; }
 
-          // Optimistic state injection before firebase triggers sync hooks
           myUsername = username;
           
           const credential = await createUserWithEmailAndPassword(auth, email, password);
@@ -131,17 +387,16 @@
       if (user) {
         currentUser = user;
         dropdownUserEmail.innerText = user.email;
-        avatarToggleBtn.innerText = user.email.charAt(0).toUpperCase();
         authView.classList.add('hidden'); dashboardView.classList.remove('hidden');
         await syncLoadHabitsFromCloud();
       } else {
         currentUser = null; habits = []; myFriendsList = []; myUsername = "";
+        avatarToggleBtn.innerText = "?";
         headerUserBadge.classList.add('hidden');
         dashboardView.classList.add('hidden'); authView.classList.remove('hidden');
       }
     });
 
-    // Cloud DB Synchronizers
     async function saveHabitsToCloud() {
       if (!currentUser) return;
       try {
@@ -159,14 +414,25 @@
         habits = data.habits || [];
         myFriendsList = data.friends || [];
         
-        // If local memory state already captured signup username, honor it. Otherwise read db value.
-        if(!myUsername) {
-          myUsername = data.username || "user";
+        if (!myUsername || myUsername === "user") {
+          myUsername = data.username || "";
+        }
+
+        // Auto-Repair Prompt fallback if tracking data contains no string profile metrics
+        if (!myUsername || myUsername === "user") {
+          let chosenRepairName = "";
+          while (!chosenRepairName) {
+            chosenRepairName = prompt("Complete your profile configuration setup! Enter your unique username below:").trim().toLowerCase().replace('@', '');
+          }
+          myUsername = chosenRepairName;
+          await setDoc(doc(db, "usernames", myUsername), { uid: currentUser.uid });
+          await setDoc(doc(db, "users_habits", currentUser.uid), { habits: habits, email: currentUser.email, username: myUsername, friends: myFriendsList });
         }
         
-        // Render identity metrics directly to interface headers
+        // Dynamically update UI text nodes seamlessly
         userDisplayHandle.innerText = `@${myUsername}`;
         dropdownUsernameTxt.innerText = `@${myUsername}`;
+        avatarToggleBtn.innerText = myUsername.charAt(0).toUpperCase();
         headerUserBadge.classList.remove('hidden');
         
         habits.forEach(h => {
@@ -177,7 +443,7 @@
       }
     }
 
-    // Real-Time Friends Lookup
+    // Friend Lookup Action Filter
     friendSearchBtn.addEventListener('click', async () => {
       const targetQuery = friendSearchInput.value.trim().toLowerCase().replace('@', '');
       searchResultsZone.innerHTML = `<p style='color:#6c7a86;'>Searching platform databases...</p>`;
@@ -205,7 +471,6 @@
       } else { searchResultsZone.innerHTML = `<p style='color:#ea4335;'>User @${targetQuery} not found online.</p>`; }
     });
 
-    // Friends List Dashboard
     async function loadFriendsListUI() {
       friendsListZone.innerHTML = `<p style="color:#6c7a86; text-align:center;">Syncing live tracking channels...</p>`;
       if(myFriendsList.length === 0) {
@@ -233,7 +498,6 @@
       friendsListZone.innerHTML = completeNetworkHTML;
     }
 
-    // Input Execution Engine
     habitForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const text = habitInput.value.trim();
@@ -338,7 +602,6 @@
         </div>`;
     }
 
-    // Fixed function with zero broken components
     function toggleCalendar(id) { const h = habits.find(x => x.id === id); h.showCalendar = !h.showCalendar; renderHabits(); }
     function renderCalendarPanel(habit) {
       const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -376,3 +639,5 @@
     async function deleteHabit(id) { if(confirm("Delete habit?")) { habits = habits.filter(h => h.id !== id); renderHabits(); saveHabitsToCloud(); } }
     window.closeModal = function() { milestoneModal.classList.add('hidden'); }
   </script>
+</body>
+</html>
