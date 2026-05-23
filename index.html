@@ -319,6 +319,102 @@
   </div>
 
   <script type="module">
+
+    let currentViewMonth = new Date().getMonth();
+
+    let currentViewYear = new Date().getFullYear();
+
+
+
+    // --- UPDATED CALENDAR RENDER WITH NAVIGATION ---
+
+    function buildCalendarHTML(habit) {
+
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+      const totalDays = new Date(habit.viewYear, habit.viewMonth + 1, 0).getDate();
+
+      const firstDay = new Date(habit.viewYear, habit.viewMonth, 1).getDay();
+
+      
+
+      let html = `
+
+        <div class="calendar-view">
+
+          <div class="calendar-navbar">
+
+            <button class="calendar-nav-btn" onclick="changeMonth(${habit.id}, -1)">◀</button>
+
+            <span>${monthNames[habit.viewMonth]} ${habit.viewYear}</span>
+
+            <button class="calendar-nav-btn" onclick="changeMonth(${habit.id}, 1)">▶</button>
+
+          </div>
+
+          <div class="calendar-grid">
+
+            ${['S','M','T','W','T','F','S'].map(d => `<div class="calendar-day-label">${d}</div>`).join('')}
+
+            ${Array(firstDay).fill('<div class="calendar-cell empty"></div>').join('')}
+
+            ${Array.from({length: totalDays}, (_, i) => i + 1).map(d => {
+
+              const dStr = `${habit.viewYear}-${String(habit.viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
+              return `<div class="calendar-cell ${habit.history.includes(dStr) ? 'completed' : ''}">${d}</div>`;
+
+            }).join('')}
+
+          </div>
+
+        </div>`;
+
+      return html;
+
+    }
+
+
+
+    // Add this helper to the global window object so the HTML buttons can find it
+
+    window.changeMonth = (habitId, delta) => {
+
+      const habit = habits.find(h => h.id === habitId);
+
+      habit.viewMonth += delta;
+
+      if (habit.viewMonth > 11) { habit.viewMonth = 0; habit.viewYear++; }
+
+      if (habit.viewMonth < 0) { habit.viewMonth = 11; habit.viewYear--; }
+
+      renderHabits();
+
+    };
+
+
+
+    // --- PERFORMANCE OPTIMIZATION ---
+
+    // Instead of re-rendering the whole page, only update the list if the data actually changed.
+
+    // Ensure your saveHabitsToCloud() is only triggered on 'click' and not in a loop.
+
+    async function toggleCompleteHabit(id) {
+
+      // ... (your existing logic)
+
+      await saveHabitsToCloud(); 
+
+      // Instead of full renderHabits(), we can just update the specific element classes
+
+      // if the list becomes very large. For now, keep renderHabits() but ensure it's
+
+      // clean and doesn't have unnecessary calculations.
+
+      renderHabits();
+
+    
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
