@@ -141,17 +141,14 @@
     .btn-calendar { background-color: #784bc4; color: white; }
     .btn-delete { background-color: #ea4335; color: white; }
 
-    /* Analytics Panel Styles */
-    .analytics-panel { margin-top: 15px; background-color: #11171d; padding: 15px; border-radius: 12px; border: 1px solid #28333e; }
-    .analytics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; text-align: center; margin-top: 10px; }
-    .metric-box { background-color: #1a2229; padding: 10px; border-radius: 8px; border: 1px solid #28333e; }
-    .metric-val { font-size: 1.2rem; font-weight: bold; color: #1cb0f6; }
-    .metric-lbl { font-size: 0.75rem; color: #6c7a86; text-transform: uppercase; margin-top: 3px; }
-
     /* Friends Network Elements */
     .friend-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background-color: #1a2229; border: 1px solid #28333e; margin-bottom: 10px; border-radius: 14px; }
+    .friend-info-block { display: flex; flex-direction: column; gap: 4px; }
     .friend-name { font-weight: bold; font-size: 1.1rem; color: #fff; }
-    .friend-score { font-weight: 800; color: #ff9800; background-color: #2e271d; padding: 4px 12px; border-radius: 8px; }
+    .friend-interactive-zone { display: flex; align-items: center; gap: 10px; }
+    .friend-score { font-weight: 800; color: #ff9800; background-color: #2e271d; padding: 4px 12px; border-radius: 8px; font-size: 0.9rem; }
+    .friend-remove-btn { background-color: #ea4335; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
+    .friend-remove-btn:hover { background-color: #ff5c4d; }
     .search-result-box { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #11171d; margin-top: 10px; border-radius: 10px; border: 1px solid #28333e; }
 
     /* Calendar Grid Layout */
@@ -418,7 +415,6 @@
           myUsername = data.username || "";
         }
 
-        // Auto-Repair Prompt fallback if tracking data contains no string profile metrics
         if (!myUsername || myUsername === "user") {
           let chosenRepairName = "";
           while (!chosenRepairName) {
@@ -429,7 +425,6 @@
           await setDoc(doc(db, "users_habits", currentUser.uid), { habits: habits, email: currentUser.email, username: myUsername, friends: myFriendsList });
         }
         
-        // Dynamically update UI text nodes seamlessly
         userDisplayHandle.innerText = `@${myUsername}`;
         dropdownUsernameTxt.innerText = `@${myUsername}`;
         avatarToggleBtn.innerText = myUsername.charAt(0).toUpperCase();
@@ -462,17 +457,14 @@
         document.getElementById('add-friend-exec-btn').addEventListener('click', async () => {
           if(!myFriendsList.includes(targetUid)) {
             try {
-              // 1. Add them to YOUR network list
               myFriendsList.push(targetUid);
               await saveHabitsToCloud();
 
-              // 2. Fetch YOUR friend's record array from Firestore
               const friendSnap = await getDoc(doc(db, "users_habits", targetUid));
               if(friendSnap.exists()) {
                 const friendData = friendSnap.data();
                 const theirFriendsList = friendData.friends || [];
                 
-                // 3. Inject YOUR active UID into their network document automatically
                 if(!theirFriendsList.includes(currentUser.uid)) {
                   theirFriendsList.push(currentUser.uid);
                   await updateDoc(doc(db, "users_habits", targetUid), { friends: theirFriendsList });
@@ -484,13 +476,14 @@
               loadFriendsListUI();
             } catch (err) {
               console.error("Error establishing connection handshake:", err);
-              alert("Could not complete mutual friendship add. Confirm your Firestore rules are updated.");
+              alert("Could not complete friendship connection.");
             }
           } else { alert("User is already your friend!"); }
         });
       } else { searchResultsZone.innerHTML = `<p style='color:#ea4335;'>User @${targetQuery} not found online.</p>`; }
     });
 
+    // Dynamic Friends Render list containing Remove Action bindings
     async function loadFriendsListUI() {
       friendsListZone.innerHTML = `<p style="color:#6c7a86; text-align:center;">Syncing live tracking channels...</p>`;
       if(myFriendsList.length === 0) {
@@ -498,7 +491,8 @@
         return;
       }
 
-      let completeNetworkHTML = '';
+      friendsListZone.innerHTML = ''; // clear placeholder container
+      
       for (let friendUid of myFriendsList) {
         const friendSnap = await getDoc(doc(db, "users_habits", friendUid));
         if(friendSnap.exists()) {
@@ -507,15 +501,48 @@
           const fHabits = fData.habits || [];
           const aggregateScore = fHabits.reduce((acc, h) => acc + (h.history ? h.history.length : 0), 0);
           
-          completeNetworkHTML += `
-            <div class="friend-row">
+          const row = document.createElement('div');
+          row.className = 'friend-row';
+          row.innerHTML = `
+            <div class="friend-info-block">
               <span class="friend-name">👤 @${fName}</span>
-              <span class="friend-score">🔥 ${aggregateScore} points</span>
+            </div>
+            <div class="friend-interactive-zone">
+              <span class="friend-score">🔥 ${aggregateScore} pts</span>
+              <button class="friend-remove-btn" id="rmv-${friendUid}">Remove ×</button>
             </div>
           `;
+          friendsListZone.appendChild(row);
+
+          // Remove Button Event Listener
+          document.getElementById(`rmv-${friendUid}`).addEventListener('click', () => removeFriendTwoWay(friendUid, fName));
         }
       }
-      friendsListZone.innerHTML = completeNetworkHTML;
+    }
+
+    // Two-Way Mutual Friendship Removal Engine
+    async function removeFriendTwoWay(targetUid, targetName) {
+      if(!confirm(`Are you sure you want to remove @${targetName} from your friends network?`)) return;
+
+      try {
+        // 1. Remove from your own list
+        myFriendsList = myFriendsList.filter(uid => uid !== targetUid);
+        await saveHabitsToCloud();
+
+        // 2. Remove from your friend's database document list
+        const friendSnap = await getDoc(doc(db, "users_habits", targetUid));
+        if(friendSnap.exists()) {
+          let theirFriendsList = friendSnap.data().friends || [];
+          theirFriendsList = theirFriendsList.filter(uid => uid !== currentUser.uid);
+          await updateDoc(doc(db, "users_habits", targetUid), { friends: theirFriendsList });
+        }
+
+        alert(`Removed connection with @${targetName}.`);
+        loadFriendsListUI();
+      } catch (err) {
+        console.error("Error breaking friendship connection:", err);
+        alert("Failed to disconnect from friend cleanly.");
+      }
     }
 
     habitForm.addEventListener('submit', async (e) => {
