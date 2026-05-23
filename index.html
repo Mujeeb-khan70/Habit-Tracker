@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HabitForge - Infinite Tracker</title>
-  
+  <title>HabitForge - Cloud Sync Edition</title>
   <style>
     body {
       background-color: #12161a;
@@ -40,6 +39,106 @@
       font-size: 1rem;
     }
 
+    /* Auth Screen Form Styles */
+    .auth-card {
+      background-color: #1a2229;
+      padding: 30px;
+      border-radius: 24px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      border: 2px solid #28333e;
+      text-align: center;
+    }
+
+    .auth-card h2 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-size: 1.5rem;
+    }
+
+    .auth-group {
+      margin-bottom: 15px;
+      text-align: left;
+    }
+
+    .auth-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: #8495a5;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+
+    .auth-input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 2px solid #28333e;
+      background-color: #11171d;
+      color: white;
+      font-size: 1rem;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .auth-input:focus {
+      border-color: #1cb0f6;
+    }
+
+    .auth-btn {
+      width: 100%;
+      background-color: #1cb0f6;
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #1899d6;
+      margin-top: 10px;
+      margin-bottom: 15px;
+    }
+
+    .auth-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #1899d6;
+    }
+
+    .auth-toggle-link {
+      color: #1cb0f6;
+      cursor: pointer;
+      font-size: 0.9rem;
+      text-decoration: underline;
+    }
+
+    .user-profile-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #1a2229;
+      padding: 10px 15px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+      border: 1px solid #28333e;
+    }
+
+    .logout-btn {
+      background: transparent;
+      border: 1px solid #ff4b4b;
+      color: #ff4b4b;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .logout-btn:hover {
+      background-color: #ff4b4b;
+      color: white;
+    }
+
+    /* Standard Tracking View Form layout */
     form {
       display: flex;
       gap: 10px;
@@ -71,12 +170,6 @@
       font-size: 1rem;
       cursor: pointer;
       box-shadow: 0 4px 0 #46a302;
-      transition: all 0.1s;
-    }
-
-    #form-submit-btn:active {
-      transform: translateY(4px);
-      box-shadow: 0 0 0 #46a302;
     }
 
     .habit-card {
@@ -181,31 +274,23 @@
       font-weight: bold;
     }
 
-    .calendar-nav-btn:hover {
-      background-color: #374656;
-      color: white;
-    }
-
     .calendar-month-title {
       font-size: 0.95rem;
       font-weight: bold;
       color: #ffffff;
-      text-transform: uppercase;
-      letter-spacing: 1px;
     }
 
     .calendar-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       gap: 6px;
-      text-align: center;
     }
 
     .calendar-day-label {
       font-size: 0.75rem;
       color: #526575;
       font-weight: bold;
-      padding-bottom: 4px;
+      text-align: center;
     }
 
     .calendar-cell {
@@ -223,7 +308,6 @@
     .calendar-cell.completed {
       background-color: #58cc02; 
       color: white;
-      box-shadow: 0 0 8px rgba(88, 204, 2, 0.4);
     }
 
     .calendar-cell.empty {
@@ -247,13 +331,9 @@
       text-align: center;
       border: 3px solid #ff9600;
       max-width: 320px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
-    .modal-icon { font-size: 4rem; margin-bottom: 10px; }
-    .modal-content h2 { color: #ff9600; margin: 0 0 10px 0; font-size: 1.6rem; }
-    #milestone-text { color: #afc1d0; line-height: 1.5; margin-bottom: 25px; }
-    .modal-close-btn { background-color: #58cc02; color: white; border: none; padding: 14px 40px; border-radius: 16px; font-weight: bold; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 0 #46a302; }
+    .modal-close-btn { background-color: #58cc02; color: white; border: none; padding: 14px 40px; border-radius: 16px; font-weight: bold; cursor: pointer; }
     .hidden { display: none !important; }
   </style>
 </head>
@@ -262,28 +342,81 @@
   <div class="app-container">
     <header>
       <div class="logo">🔥 HabitForge</div>
-      <p class="subtitle">Build your streak. Never miss twice.</p>
+      <p class="subtitle">Cloud-Sync Habit Tracker</p>
     </header>
 
-    <form id="habit-form">
-      <input type="hidden" id="edit-id">
-      <input type="text" id="habit-input" placeholder="⚡ Learn Spanish, Gym, Code..." required>
-      <button type="submit" id="form-submit-btn">Add +</button>
-    </form>
+    <div id="auth-view" class="auth-card">
+      <h2 id="auth-title">Log In to Your Account</h2>
+      <div class="auth-group">
+        <label>Email Address</label>
+        <input type="email" id="auth-email" class="auth-input" placeholder="name@example.com">
+      </div>
+      <div class="auth-group">
+        <label>Password</label>
+        <input type="password" id="auth-password" class="auth-input" placeholder="••••••••">
+      </div>
+      <button id="auth-submit-btn" class="auth-btn">Sign In</button>
+      <p><span id="auth-toggle-msg">New to HabitForge?</span> <span id="auth-toggle-link" class="auth-toggle-link">Create an account</span></p>
+    </div>
 
-    <div id="habits-list"></div>
+    <div id="dashboard-view" class="hidden">
+      <div class="user-profile-bar">
+        <span id="user-display-email">loading user...</span>
+        <button class="logout-btn" id="logout-action-btn">Logout</button>
+      </div>
+
+      <form id="habit-form">
+        <input type="hidden" id="edit-id">
+        <input type="text" id="habit-input" placeholder="⚡ Learn Spanish, Gym, Code..." required>
+        <button type="submit" id="form-submit-btn">Add +</button>
+      </form>
+
+      <div id="habits-list"></div>
+    </div>
   </div>
 
   <div id="milestone-modal" class="modal hidden">
     <div class="modal-content">
-      <div class="modal-icon">🏆</div>
+      <div class="modal-icon" style="font-size: 4rem; margin-bottom: 10px;">🏆</div>
       <h2>MILESTONE UNLOCKED!</h2>
-      <p id="milestone-text"></p>
+      <p id="milestone-text" style="color: #afc1d0; margin-bottom: 25px;"></p>
       <button class="modal-close-btn" onclick="closeModal()">Awesome!</button>
     </div>
   </div>
 
-  <script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // PASTE YOUR FIREBASE OBJECT CONFIG KEYS RIGHT HERE
+    const firebaseConfig = {
+     apiKey: "AIzaSyBN1YdLiD9GaxS9b0wvzvPnixYGe7vhjbk",
+authDomain: "habit-tracker-937ca.firebaseapp.com",
+projectId: "habit-tracker-937ca",
+storageBucket: "habit-tracker-937ca.firebasestorage.app",
+messagingSenderId: "667829126838",
+appId: "1:667829126838:web:fb5f436362b777e58e0817",
+measurementId: "G-WCHFVVNZX1"
+    };
+
+    // Initialize Global Instances
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Domestic View Selectors
+    const authView = document.getElementById('auth-view');
+    const dashboardView = document.getElementById('dashboard-view');
+    const authTitle = document.getElementById('auth-title');
+    const authEmail = document.getElementById('auth-email');
+    const authPassword = document.getElementById('auth-password');
+    const authSubmitBtn = document.getElementById('auth-submit-btn');
+    const authToggleLink = document.getElementById('auth-toggle-link');
+    const authToggleMsg = document.getElementById('auth-toggle-msg');
+    const userDisplayEmail = document.getElementById('user-display-email');
+    const logoutActionBtn = document.getElementById('logout-action-btn');
+
     const habitForm = document.getElementById('habit-form');
     const habitInput = document.getElementById('habit-input');
     const editIdInput = document.getElementById('edit-id');
@@ -292,17 +425,98 @@
     const milestoneModal = document.getElementById('milestone-modal');
     const milestoneText = document.getElementById('milestone-text');
 
-    let habits = JSON.parse(localStorage.getItem('habits')) || [];
+    let habits = [];
+    let currentUser = null;
+    let isLoginMode = true;
 
     const todayGlobal = new Date();
     const currentYearGlobal = todayGlobal.getFullYear();
     const currentMonthGlobal = todayGlobal.getMonth();
 
-    function saveToStorage() {
-      localStorage.setItem('habits', JSON.stringify(habits));
+    // Toggle logic between Sign In and Sign Up Layout interfaces
+    authToggleLink.addEventListener('click', () => {
+      isLoginMode = !isLoginMode;
+      if (isLoginMode) {
+        authTitle.innerText = "Log In to Your Account";
+        authSubmitBtn.innerText = "Sign In";
+        authToggleMsg.innerText = "New to HabitForge?";
+        authToggleLink.innerText = "Create an account";
+      } else {
+        authTitle.innerText = "Create Your Free Account";
+        authSubmitBtn.innerText = "Sign Up & Sync";
+        authToggleMsg.innerText = "Already have an account?";
+        authToggleLink.innerText = "Log in here";
+      }
+    });
+
+    // Execute Client Authentication Requests
+    authSubmitBtn.addEventListener('click', async () => {
+      const email = authEmail.value.trim();
+      const password = authPassword.value;
+
+      if (!email || !password) {
+        alert("Please completely fill out all login fields.");
+        return;
+      }
+
+      try {
+        if (isLoginMode) {
+          await signInWithEmailAndPassword(auth, email, password);
+        } else {
+          await createUserWithEmailAndPassword(auth, email, password);
+        }
+      } catch (error) {
+        alert(error.message);
+      }
+    });
+
+    logoutActionBtn.addEventListener('click', () => {
+      signOut(auth);
+    });
+
+    // Monitor Firebase Login States
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        userDisplayEmail.innerText = user.email;
+        authView.classList.add('hidden');
+        dashboardView.classList.remove('hidden');
+        await syncLoadHabitsFromCloud();
+      } else {
+        currentUser = null;
+        habits = [];
+        dashboardView.classList.add('hidden');
+        authView.classList.remove('hidden');
+      }
+    });
+
+    // Save completely data architecture models to Firestore
+    async function saveHabitsToCloud() {
+      if (!currentUser) return;
+      try {
+        await setDoc(doc(db, "users_habits", currentUser.uid), { habits: habits });
+      } catch (e) {
+        console.error("Database write error: ", e);
+      }
     }
 
-    habitForm.addEventListener('submit', (e) => {
+    async function syncLoadHabitsFromCloud() {
+      if (!currentUser) return;
+      try {
+        const docRef = doc(db, "users_habits", currentUser.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          habits = docSnap.data().habits || [];
+        } else {
+          habits = [];
+        }
+        renderHabits();
+      } catch (e) {
+        console.error("Database read error: ", e);
+      }
+    }
+
+    habitForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const text = habitInput.value.trim();
       const editId = editIdInput.value;
@@ -327,13 +541,12 @@
       }
 
       habitInput.value = '';
-      saveToStorage();
+      await saveHabitsToCloud();
       renderHabits();
     });
 
     function renderHabits() {
       habitsList.innerHTML = '';
-      
       const today = new Date().setHours(0,0,0,0);
       const oneDayInMs = 24 * 60 * 60 * 1000;
 
@@ -368,47 +581,50 @@
         const completeBtnClass = isDoneToday ? "btn-complete checked" : "btn-complete";
         const completeBtnText = isDoneToday ? "✓ Done" : "Complete";
 
-        let cardHTML = `
+        card.innerHTML = `
           <div class="habit-header">
             <span class="habit-title">${habit.name}</span>
             <span class="streak-badge">🔥 ${habit.streak}</span>
           </div>
           <p class="motivation-msg">${statusMessage}</p>
           <div class="habit-actions">
-            <button class="${completeBtnClass}" onclick="toggleCompleteHabit(${habit.id})">
+            <button class="${completeBtnClass}" id="comp-${habit.id}">
               ${completeBtnText}
             </button>
-            <button class="btn-calendar" onclick="toggleCalendar(${habit.id})">📅 View</button>
-            <button class="btn-edit" onclick="editHabit(${habit.id})">Edit</button>
-            <button class="btn-delete" onclick="deleteHabit(${habit.id})">Delete</button>
+            <button class="btn-calendar" id="cal-${habit.id}">📅 View</button>
+            <button class="btn-edit" id="edit-${habit.id}">Edit</button>
+            <button class="btn-delete" id="del-${habit.id}">Delete</button>
           </div>
+          <div id="cal-box-${habit.id}"></div>
         `;
 
-        if (habit.showCalendar) {
-          cardHTML += buildCalendarHTML(habit);
-        }
-
-        card.innerHTML = cardHTML;
         habitsList.appendChild(card);
+
+        // Interactive Button Event Listeners inside dynamic context scope
+        document.getElementById(`comp-${habit.id}`).addEventListener('click', () => toggleCompleteHabit(habit.id));
+        document.getElementById(`cal-${habit.id}`).addEventListener('click', () => toggleCalendar(habit.id));
+        document.getElementById(`edit-${habit.id}`).addEventListener('click', () => editHabit(habit.id));
+        document.getElementById(`del-${habit.id}`).addEventListener('click', () => deleteHabit(habit.id));
+
+        if (habit.showCalendar) {
+          document.getElementById(`cal-box-${habit.id}`).innerHTML = buildCalendarHTML(habit);
+        }
       });
     }
 
     function buildCalendarHTML(habit) {
       const year = habit.viewYear;
       const month = habit.viewMonth; 
-      
       const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-      
       const firstDayIndex = new Date(year, month, 1).getDay(); 
       const totalDays = new Date(year, month + 1, 0).getDate(); 
 
-      // Cleaned up layout: buttons are completely unrestricted and work infinitely!
       let html = `
         <div class="calendar-view">
           <div class="calendar-navbar">
-            <button class="calendar-nav-btn" onclick="navigateMonth(${habit.id}, -1)">◀</button>
+            <button class="calendar-nav-btn" id="prev-${habit.id}">◀</button>
             <div class="calendar-month-title">${monthNames[month]} ${year}</div>
-            <button class="calendar-nav-btn" onclick="navigateMonth(${habit.id}, 1)">▶</button>
+            <button class="calendar-nav-btn" id="next-${habit.id}">▶</button>
           </div>
           <div class="calendar-grid">
             <div class="calendar-day-label">S</div><div class="calendar-day-label">M</div><div class="calendar-day-label">T</div>
@@ -422,35 +638,34 @@
 
       for (let day = 1; day <= totalDays; day++) {
         const formattedDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        
         const isCompleted = habit.history.includes(formattedDateStr);
         const activeClass = isCompleted ? 'completed' : '';
-
         html += `<div class="calendar-cell ${activeClass}">${day}</div>`;
       }
 
       html += `</div></div>`;
+      
+      // Inject listeners following DOM frame placement execution
+      setTimeout(() => {
+        const prevBtn = document.getElementById(`prev-${habit.id}`);
+        const nextBtn = document.getElementById(`next-${habit.id}`);
+        if(prevBtn) prevBtn.addEventListener('click', () => navigateMonth(habit.id, -1));
+        if(nextBtn) nextBtn.addEventListener('click', () => navigateMonth(habit.id, 1));
+      }, 0);
+
       return html;
     }
 
-    window.navigateMonth = function(id, direction) {
+    async function navigateMonth(id, direction) {
       const habit = habits.find(h => h.id === id);
       if (!habit) return;
-
       habit.viewMonth += direction;
-
-      if (habit.viewMonth < 0) {
-        habit.viewMonth = 11;
-        habit.viewYear -= 1;
-      } else if (habit.viewMonth > 11) {
-        habit.viewMonth = 0;
-        habit.viewYear += 1;
-      }
-
+      if (habit.viewMonth < 0) { habit.viewMonth = 11; habit.viewYear -= 1; }
+      else if (habit.viewMonth > 11) { habit.viewMonth = 0; habit.viewYear += 1; }
       renderHabits();
-    };
+    }
 
-    window.toggleCalendar = function(id) {
+    async function toggleCalendar(id) {
       const habit = habits.find(h => h.id === id);
       if (habit) {
         habit.showCalendar = !habit.showCalendar;
@@ -460,22 +675,20 @@
         }
         renderHabits();
       }
-    };
+    }
 
-    window.toggleCompleteHabit = function(id) {
+    async function toggleCompleteHabit(id) {
       const habit = habits.find(h => h.id === id);
       if (!habit) return;
 
       const todayObj = new Date();
       const formattedToday = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
       const todayTimestamp = todayObj.setHours(0,0,0,0);
-
       const wasAlreadyDoneToday = habit.lastCompleted && new Date(habit.lastCompleted).setHours(0,0,0,0) === todayTimestamp;
 
       if (wasAlreadyDoneToday) {
         if (habit.streak > 0) habit.streak -= 1;
         habit.history = habit.history.filter(dateStr => dateStr !== formattedToday);
-        
         if (habit.history.length > 0) {
           const sortedHistory = [...habit.history].sort((a, b) => new Date(b) - new Date(a));
           habit.lastCompleted = new Date(sortedHistory[0]).getTime();
@@ -485,10 +698,7 @@
       } else {
         habit.streak += 1;
         habit.lastCompleted = Date.now();
-
-        if (!habit.history.includes(formattedToday)) {
-          habit.history.push(formattedToday);
-        }
+        if (!habit.history.includes(formattedToday)) habit.history.push(formattedToday);
 
         const milestones = [7, 30, 100, 365];
         if (milestones.includes(habit.streak)) {
@@ -496,24 +706,24 @@
         }
       }
 
-      saveToStorage();
+      await saveHabitsToCloud();
       renderHabits();
-    };
+    }
 
-    window.editHabit = function(id) {
+    function editHabit(id) {
       const habit = habits.find(h => h.id === id);
       if (!habit) return;
       habitInput.value = habit.name;
       editIdInput.value = habit.id;
       formSubmitBtn.innerText = 'Save';
       habitInput.focus();
-    };
+    }
 
-    window.deleteHabit = function(id) {
+    async function deleteHabit(id) {
       habits = habits.filter(h => h.id !== id);
-      saveToStorage();
+      await saveHabitsToCloud();
       renderHabits();
-    };
+    }
 
     function triggerMilestone(name, streak) {
       milestoneText.innerText = `Your dedication to "${name}" has reached a massive milestone of ${streak} days in a row!`;
@@ -523,8 +733,6 @@
     window.closeModal = function() {
       milestoneModal.classList.add('hidden');
     }
-
-    renderHabits();
   </script>
 </body>
 </html>
