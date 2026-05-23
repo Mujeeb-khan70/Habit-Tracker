@@ -118,7 +118,19 @@
 
     /* Navigation Tabs */
     .view-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-    .tab-btn { flex: 1; padding: 12px; border-radius: 12px; border: none; background-color: #1a2229; color: #8495a5; font-weight: bold; cursor: pointer; transition: 0.2s; border: 1px solid #28333e; }
+    .tab-btn { 
+      flex: 1; 
+      padding: 14px; 
+      border-radius: 12px; 
+      border: none; 
+      background-color: #1a2229; 
+      color: #8495a5; 
+      font-weight: 700; 
+      font-size: 1.15rem; 
+      cursor: pointer; 
+      transition: 0.2s; 
+      border: 1px solid #28333e; 
+    }
     .tab-btn.active { background-color: #28333e; color: #ff9800; border-color: #ff9800; }
 
     /* Shared Action Layouts */
@@ -138,8 +150,15 @@
     .habit-card.archived-state { opacity: 0.6; border-style: dashed; }
     .habit-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
     .habit-title { font-size: 1.25rem; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 8px; }
-    .privacy-indicator { font-size: 0.75rem; background: #28333e; padding: 2px 6px; border-radius: 4px; color: #8495a5; font-weight: bold; }
-    .streak-badge { font-size: 1.3rem; font-weight: 800; color: #ff9600; background-color: #2e271d; padding: 4px 12px; border-radius: 12px; }
+    
+    /* Right Side Status Indicators Cluster */
+    .status-badge-cluster {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .streak-badge { font-size: 1.3rem; font-weight: 800; color: #ff9600; background-color: #2e271d; padding: 4px 12px; border-radius: 12px; display: flex; align-items: center; }
+    .privacy-mini-icon { font-size: 0.95rem; background-color: #232a31; padding: 6px 8px; border-radius: 10px; border: 1px solid #313d4a; display: inline-flex; align-items: center; justify-content: center; }
     
     .milestone-container { margin-top: 10px; margin-bottom: 18px; }
     .milestone-meta { display: flex; justify-content: space-between; font-size: 0.8rem; color: #a4b3c1; margin-bottom: 5px; font-weight: bold; }
@@ -491,7 +510,7 @@
           if (h.isPrivate === undefined) h.isPrivate = false;
           if (h.isArchived === undefined) h.isArchived = false;
           if (h.showEditor === undefined) h.showEditor = false;
-          h.showAnalytics = false; // no longer separate panel
+          h.showAnalytics = false;
         });
 
         updateUserLevelDisplay();
@@ -639,6 +658,9 @@
 
         const isDoneToday = habit.lastCompleted && new Date(habit.lastCompleted).setHours(0,0,0,0) === today;
         const metrics = getMilestoneMetrics(habit.streak);
+        
+        // Uses globe icon for public, lock icon for private
+        const privacyIconText = habit.isPrivate ? '🔒' : '🌐';
 
         const card = document.createElement('div');
         card.className = `habit-card ${habit.isArchived ? 'archived-state':''}`;
@@ -646,9 +668,11 @@
           <div class="habit-header">
             <span class="habit-title">
               <span>${habit.emoji || '🎯'}</span> ${habit.name}
-              ${habit.isPrivate ? '<span class="privacy-indicator">🔒 Private</span>':''}
             </span>
-            <span class="streak-badge">🔥 ${habit.streak}</span>
+            <div class="status-badge-cluster">
+              <span class="streak-badge">🔥 ${habit.streak}</span>
+              <span class="privacy-mini-icon">${privacyIconText}</span>
+            </div>
           </div>
           <div class="milestone-container">
             <div class="milestone-meta"><span>📊 ${habit.streak} Completed</span><span style="color:#ff9800;">Target: ${metrics.target} Days</span></div>
