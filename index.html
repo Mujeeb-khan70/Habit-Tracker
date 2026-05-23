@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Habit Forge - Friends Network Pro</title>
+  <title>Habit Forge - Masters Edition</title>
   <style>
     body {
       background-color: #12161a;
@@ -41,8 +41,8 @@
     /* Modern Dynamic Username Container */
     .username-container {
       display: flex;
-      align-items: center;
-      gap: 6px;
+      flex-direction: column;
+      gap: 2px;
       margin-top: 2px;
     }
 
@@ -50,6 +50,12 @@
       color: #1cb0f6;
       font-weight: 700;
       font-size: 0.95rem;
+    }
+
+    .user-level-badge {
+      font-size: 0.8rem;
+      color: #58cc02;
+      font-weight: bold;
     }
 
     .copy-btn {
@@ -117,14 +123,22 @@
 
     /* Shared Action Layouts */
     .action-panel-card { background-color: #1a2229; padding: 15px; border-radius: 20px; margin-bottom: 25px; border: 1px solid #28333e; }
-    .flex-form { display: flex; gap: 10px; }
-    .flex-form input[type="text"] { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #28333e; background-color: #11171d; color: white; font-size: 1rem; outline: none; }
-    .submit-action-btn { background-color: #58cc02; color: white; border: none; padding: 0 20px; border-radius: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #46a302; }
+    .flex-form { display: flex; flex-direction: column; gap: 12px; }
+    .input-row { display: flex; gap: 10px; }
+    .input-row input[type="text"] { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #28333e; background-color: #11171d; color: white; font-size: 1rem; outline: none; }
+    
+    .meta-selectors { display: flex; gap: 10px; justify-content: space-between; align-items: center; background: #11171d; padding: 8px 12px; border-radius: 10px; border: 1px solid #28333e; }
+    .meta-selectors select { background: #28333e; color: white; border: 1px solid #374654; padding: 6px; border-radius: 6px; outline: none; font-weight: bold; }
+    .toggle-label { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: bold; color: #a4b3c1; cursor: pointer; }
+
+    .submit-action-btn { background-color: #58cc02; color: white; border: none; padding: 0 20px; border-radius: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #46a302; height: 46px; }
 
     /* Habit Card Layout with Progress Bars */
-    .habit-card { background-color: #1a2229; border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 2px solid #28333e; }
+    .habit-card { background-color: #1a2229; border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 2px solid #28333e; position: relative; }
+    .habit-card.archived-state { opacity: 0.6; border-style: dashed; }
     .habit-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-    .habit-title { font-size: 1.25rem; font-weight: 700; color: #ffffff; }
+    .habit-title { font-size: 1.25rem; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 8px; }
+    .privacy-indicator { font-size: 0.75rem; background: #28333e; padding: 2px 6px; border-radius: 4px; color: #8495a5; font-weight: bold; }
     .streak-badge { font-size: 1.3rem; font-weight: 800; color: #ff9600; background-color: #2e271d; padding: 4px 12px; border-radius: 12px; }
     
     .milestone-container { margin-top: 10px; margin-bottom: 18px; }
@@ -133,13 +147,18 @@
     .progress-fill { height: 100%; background: linear-gradient(90deg, #ff9800, #ffb74d); width: 0%; border-radius: 10px; transition: width 0.4s ease; }
     .motivation-msg { font-size: 0.85rem; color: #6c7a86; margin: 0 0 15px 0; }
 
-    .habit-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    .habit-actions button { flex: 1; min-width: 70px; border: none; padding: 10px; border-radius: 10px; font-weight: bold; font-size: 0.85rem; cursor: pointer; }
+    .habit-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .habit-actions button { flex: 1; min-width: 65px; border: none; padding: 8px; border-radius: 10px; font-weight: bold; font-size: 0.8rem; cursor: pointer; }
     .btn-complete { background-color: #1cb0f6; color: white; box-shadow: 0 4px 0 #1899d6; }
     .btn-complete.checked { background-color: #58cc02; box-shadow: 0 4px 0 #46a302; }
+    .btn-edit { background-color: #4b5a6a; color: white; }
     .btn-analytics { background-color: #ff9800; color: white; }
     .btn-calendar { background-color: #784bc4; color: white; }
+    .btn-archive { background-color: #d89614; color: white; }
     .btn-delete { background-color: #ea4335; color: white; }
+
+    /* Inline Editor Panel */
+    .edit-panel { background: #11171d; padding: 12px; border-radius: 12px; border: 1px solid #28333e; margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
 
     /* Friends Network Elements */
     .friend-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background-color: #1a2229; border: 1px solid #28333e; margin-bottom: 10px; border-radius: 14px; }
@@ -161,6 +180,10 @@
     .calendar-cell.completed { background-color: #58cc02; color: white; }
     .calendar-cell.empty { background-color: transparent; }
 
+    .view-toggle-row { display: flex; justify-content: flex-end; margin-bottom: 12px; padding-right: 5px; }
+    .view-toggle-btn { background: transparent; border: 1px solid #28333e; color: #8495a5; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; cursor: pointer; font-weight: bold; }
+    .view-toggle-btn.active { border-color: #d89614; color: #d89614; background: #232921; }
+
     .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(10, 14, 18, 0.9); display: flex; justify-content: center; align-items: center; z-index: 2000; }
     .modal-content { background-color: #1a2229; padding: 35px; border-radius: 28px; text-align: center; border: 3px solid #ff9600; max-width: 340px; }
     .modal-close-btn { background-color: #58cc02; color: white; border: none; padding: 12px 35px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 15px; }
@@ -175,8 +198,11 @@
       <div class="logo-area">
         <div class="logo">🔥 Habit Forge</div>
         <div class="username-container hidden" id="header-user-badge">
-          <span class="user-handle-text" id="user-display-handle">@username</span>
-          <button class="copy-btn" id="copy-username-btn">Copy 📋</button>
+          <div>
+            <span class="user-handle-text" id="user-display-handle">@username</span>
+            <button class="copy-btn" id="copy-username-btn">Copy 📋</button>
+          </div>
+          <span class="user-level-badge" id="user-display-level">Level 1 Tracker</span>
         </div>
       </div>
       
@@ -221,10 +247,32 @@
       <div id="panel-habits">
         <div class="action-panel-card">
           <form id="habit-form" class="flex-form">
-            <input type="text" id="habit-input" placeholder="⚡ Enter new habit..." required>
-            <button type="submit" class="submit-action-btn">Add +</button>
+            <div class="input-row">
+              <input type="text" id="habit-input" placeholder="⚡ Enter new habit..." required>
+              <button type="submit" class="submit-action-btn">Add +</button>
+            </div>
+            <div class="meta-selectors">
+              <div>
+                <label style="font-size:0.8rem; color:#8495a5; font-weight:bold; margin-right:4px;">Emoji:</label>
+                <select id="habit-emoji-select">
+                  <option value="🎯">🎯 Target</option>
+                  <option value="🏃‍♂️">🏃‍♂️ Fitness</option>
+                  <option value="🧠">🧠 Mind</option>
+                  <option value="💼">💼 Work</option>
+                  <option value="🍏">🍏 Health</option>
+                </select>
+              </div>
+              <label class="toggle-label">
+                <input type="checkbox" id="habit-privacy-check"> Private Habit 🔒
+              </label>
+            </div>
           </form>
         </div>
+
+        <div class="view-toggle-row">
+          <button class="view-toggle-btn" id="toggle-archive-view-btn">Show Archived Habits</button>
+        </div>
+
         <div id="habits-list"></div>
       </div>
 
@@ -232,8 +280,10 @@
         <div class="action-panel-card">
           <h3 style="margin-top:0; margin-bottom:10px;">Find Friends Online</h3>
           <div class="flex-form">
-            <input type="text" id="friend-search-input" placeholder="🔍 Type friend's exact username...">
-            <button id="friend-search-btn" class="submit-action-btn" style="background-color:#784bc4; box-shadow:0 4px 0 #5b3699;">Search</button>
+            <div class="input-row">
+              <input type="text" id="friend-search-input" placeholder="🔍 Type friend's exact username...">
+              <button id="friend-search-btn" class="submit-action-btn" style="background-color:#784bc4; box-shadow:0 4px 0 #5b3699;">Search</button>
+            </div>
           </div>
           <div id="search-results-zone"></div>
         </div>
@@ -286,6 +336,7 @@
     
     const headerUserBadge = document.getElementById('header-user-badge');
     const userDisplayHandle = document.getElementById('user-display-handle');
+    const userDisplayLevel = document.getElementById('user-display-level');
     const copyUsernameBtn = document.getElementById('copy-username-btn');
     const dropdownUsernameTxt = document.getElementById('dropdown-username-txt');
 
@@ -301,6 +352,9 @@
 
     const habitForm = document.getElementById('habit-form');
     const habitInput = document.getElementById('habit-input');
+    const habitEmojiSelect = document.getElementById('habit-emoji-select');
+    const habitPrivacyCheck = document.getElementById('habit-privacy-check');
+    const toggleArchiveViewBtn = document.getElementById('toggle-archive-view-btn');
     const habitsList = document.getElementById('habits-list');
 
     const friendSearchInput = document.getElementById('friend-search-input');
@@ -316,10 +370,11 @@
     let myUsername = "";
     let myFriendsList = [];
     let isLoginMode = true;
+    let showArchivedMode = false;
 
     const MILESTONE_TIERS = [7, 21, 30, 70, 100, 150, 200, 300, 375, 500, 1000];
 
-    // Tab Channel Navigation
+    // Tab Navigation
     tabHabits.addEventListener('click', () => {
       tabHabits.classList.add('active'); tabFriends.classList.remove('active');
       panelHabits.classList.remove('hidden'); panelSocial.classList.add('hidden');
@@ -334,7 +389,13 @@
     avatarToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); avatarDropdownBox.classList.toggle('hidden'); });
     document.addEventListener('click', () => avatarDropdownBox.classList.add('hidden'));
 
-    // Text Copy Action Handler
+    toggleArchiveViewBtn.addEventListener('click', () => {
+      showArchivedMode = !showArchivedMode;
+      toggleArchiveViewBtn.innerText = showArchivedMode ? "Show Active Habits" : "Show Archived Habits";
+      toggleArchiveViewBtn.classList.toggle('active', showArchivedMode);
+      renderHabits();
+    });
+
     copyUsernameBtn.addEventListener('click', () => {
       if(!myUsername || myUsername === "user") return;
       navigator.clipboard.writeText(`@${myUsername}`);
@@ -343,7 +404,6 @@
       setTimeout(() => { copyUsernameBtn.innerText = baseText; }, 2000);
     });
 
-    // Form Toggle View Controller
     authToggleLink.addEventListener('click', () => {
       isLoginMode = !isLoginMode;
       authTitle.innerText = isLoginMode ? "Log In to Your Account" : "Create Your Free Account";
@@ -354,7 +414,6 @@
       else usernameRegisterGroup.classList.remove('hidden');
     });
 
-    // Sync Authentication Trigger Action
     authSubmitBtn.addEventListener('click', async () => {
       const email = authEmail.value.trim(); const password = authPassword.value;
       const username = authUsername.value.trim().toLowerCase().replace('@', '');
@@ -370,7 +429,6 @@
           if(nameCheck.exists()) { alert("Username already taken! Choose another."); return; }
 
           myUsername = username;
-          
           const credential = await createUserWithEmailAndPassword(auth, email, password);
           await setDoc(doc(db, "usernames", username), { uid: credential.user.uid });
           await setDoc(doc(db, "users_habits", credential.user.uid), { habits: [], email: email, username: username, friends: [] });
@@ -400,7 +458,14 @@
         await setDoc(doc(db, "users_habits", currentUser.uid), { 
           habits: habits, email: currentUser.email, username: myUsername, friends: myFriendsList 
         });
+        updateUserLevelDisplay();
       } catch (error) { console.error("Database sync failed:", error); }
+    }
+
+    function updateUserLevelDisplay() {
+      const score = habits.reduce((acc, h) => acc + (h.history ? h.history.length : 0), 0);
+      const calculatedLevel = Math.floor(score / 15) + 1;
+      userDisplayLevel.innerText = `Level ${calculatedLevel} Tracker (${score} XP)`;
     }
 
     async function syncLoadHabitsFromCloud() {
@@ -410,35 +475,28 @@
         const data = snap.data();
         habits = data.habits || [];
         myFriendsList = data.friends || [];
-        
-        if (!myUsername || myUsername === "user") {
-          myUsername = data.username || "";
-        }
-
-        if (!myUsername || myUsername === "user") {
-          let chosenRepairName = "";
-          while (!chosenRepairName) {
-            chosenRepairName = prompt("Complete your profile configuration setup! Enter your unique username below:").trim().toLowerCase().replace('@', '');
-          }
-          myUsername = chosenRepairName;
-          await setDoc(doc(db, "usernames", myUsername), { uid: currentUser.uid });
-          await setDoc(doc(db, "users_habits", currentUser.uid), { habits: habits, email: currentUser.email, username: myUsername, friends: myFriendsList });
-        }
+        myUsername = data.username || "";
         
         userDisplayHandle.innerText = `@${myUsername}`;
         dropdownUsernameTxt.innerText = `@${myUsername}`;
         avatarToggleBtn.innerText = myUsername.charAt(0).toUpperCase();
         headerUserBadge.classList.remove('hidden');
         
+        // Data Migration Fields for older profiles
         habits.forEach(h => {
           if (h.viewMonth === undefined) h.viewMonth = new Date().getMonth();
           if (h.viewYear === undefined) h.viewYear = new Date().getFullYear();
+          if (h.emoji === undefined) h.emoji = "🎯";
+          if (h.isPrivate === undefined) h.isPrivate = false;
+          if (h.isArchived === undefined) h.isArchived = false;
+          if (h.showEditor === undefined) h.showEditor = false;
         });
+
+        updateUserLevelDisplay();
         renderHabits();
       }
     }
 
-    // Two-Way Automatic Friendship Connection 
     friendSearchBtn.addEventListener('click', async () => {
       const targetQuery = friendSearchInput.value.trim().toLowerCase().replace('@', '');
       searchResultsZone.innerHTML = `<p style='color:#6c7a86;'>Searching platform databases...</p>`;
@@ -451,7 +509,7 @@
         searchResultsZone.innerHTML = `
           <div class="search-result-box">
             <span style="font-weight:bold; color:white;">✨ @${targetQuery} Found!</span>
-            <button class="submit-action-btn" id="add-friend-exec-btn" style="padding: 6px 14px;">Add +</button>
+            <button class="submit-action-btn" id="add-friend-exec-btn" style="padding: 6px 14px; height:auto;">Add +</button>
           </div>
         `;
         document.getElementById('add-friend-exec-btn').addEventListener('click', async () => {
@@ -464,34 +522,27 @@
               if(friendSnap.exists()) {
                 const friendData = friendSnap.data();
                 const theirFriendsList = friendData.friends || [];
-                
                 if(!theirFriendsList.includes(currentUser.uid)) {
                   theirFriendsList.push(currentUser.uid);
                   await updateDoc(doc(db, "users_habits", targetUid), { friends: theirFriendsList });
                 }
               }
-
-              alert(`🎉 You and @${targetQuery} are now mutually connected!`);
+              alert(`🎉 You and ${targetQuery} are now mutually connected!`);
               friendSearchInput.value = ''; searchResultsZone.innerHTML = '';
               loadFriendsListUI();
-            } catch (err) {
-              console.error("Error establishing connection handshake:", err);
-              alert("Could not complete friendship connection.");
-            }
+            } catch (err) { alert("Could not complete friendship connection."); }
           } else { alert("User is already your friend!"); }
         });
       } else { searchResultsZone.innerHTML = `<p style='color:#ea4335;'>User @${targetQuery} not found online.</p>`; }
     });
 
-    // Dynamic Friends Render list containing Remove Action bindings
     async function loadFriendsListUI() {
       friendsListZone.innerHTML = `<p style="color:#6c7a86; text-align:center;">Syncing live tracking channels...</p>`;
       if(myFriendsList.length === 0) {
-        friendsListZone.innerHTML = `<p style="color:#6c7a86; text-align:center;">Your friends network is currently empty. Search for users above!</p>`;
+        friendsListZone.innerHTML = `<p style="color:#6c7a86; text-align:center;">Your friends network is currently empty.</p>`;
         return;
       }
-
-      friendsListZone.innerHTML = ''; // clear placeholder container
+      friendsListZone.innerHTML = '';
       
       for (let friendUid of myFriendsList) {
         const friendSnap = await getDoc(doc(db, "users_habits", friendUid));
@@ -499,13 +550,18 @@
           const fData = friendSnap.data();
           const fName = fData.username || "Anonymous";
           const fHabits = fData.habits || [];
-          const aggregateScore = fHabits.reduce((acc, h) => acc + (h.history ? h.history.length : 0), 0);
+          
+          // Calculate score ignoring private habits
+          const aggregateScore = fHabits.reduce((acc, h) => {
+            if(h.isPrivate) return acc;
+            return acc + (h.history ? h.history.length : 0);
+          }, 0);
           
           const row = document.createElement('div');
           row.className = 'friend-row';
           row.innerHTML = `
             <div class="friend-info-block">
-              <span class="friend-name">👤 @${fName}</span>
+              <span class="friend-name">👤 ${fName}</span>
             </div>
             <div class="friend-interactive-zone">
               <span class="friend-score">🔥 ${aggregateScore} pts</span>
@@ -513,47 +569,41 @@
             </div>
           `;
           friendsListZone.appendChild(row);
-
-          // Remove Button Event Listener
           document.getElementById(`rmv-${friendUid}`).addEventListener('click', () => removeFriendTwoWay(friendUid, fName));
         }
       }
     }
 
-    // Two-Way Mutual Friendship Removal Engine
     async function removeFriendTwoWay(targetUid, targetName) {
-      if(!confirm(`Are you sure you want to remove @${targetName} from your friends network?`)) return;
-
+      if(!confirm(`Remove ${targetName} from your friends network?`)) return;
       try {
-        // 1. Remove from your own list
         myFriendsList = myFriendsList.filter(uid => uid !== targetUid);
         await saveHabitsToCloud();
-
-        // 2. Remove from your friend's database document list
         const friendSnap = await getDoc(doc(db, "users_habits", targetUid));
         if(friendSnap.exists()) {
           let theirFriendsList = friendSnap.data().friends || [];
           theirFriendsList = theirFriendsList.filter(uid => uid !== currentUser.uid);
           await updateDoc(doc(db, "users_habits", targetUid), { friends: theirFriendsList });
         }
-
-        alert(`Removed connection with @${targetName}.`);
+        alert(`Removed connection with ${targetName}.`);
         loadFriendsListUI();
-      } catch (err) {
-        console.error("Error breaking friendship connection:", err);
-        alert("Failed to disconnect from friend cleanly.");
-      }
+      } catch (err) { alert("Failed to disconnect cleanly."); }
     }
 
     habitForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const text = habitInput.value.trim();
+      const selectedEmoji = habitEmojiSelect.value;
+      const privacySetting = habitPrivacyCheck.checked;
+
       const newHabit = {
         id: Date.now(), name: text, streak: 0, lastCompleted: null, history: [],
-        showCalendar: false, showAnalytics: false,
+        showCalendar: false, showAnalytics: false, showEditor: false,
+        emoji: selectedEmoji, isPrivate: privacySetting, isArchived: false,
         viewMonth: new Date().getMonth(), viewYear: new Date().getFullYear()
       };
-      habits.push(newHabit); habitInput.value = '';
+      habits.push(newHabit); 
+      habitInput.value = ''; habitPrivacyCheck.checked = false;
       renderHabits(); saveHabitsToCloud();
     });
 
@@ -570,7 +620,14 @@
       const today = new Date().setHours(0,0,0,0);
       const oneDayInMs = 24 * 60 * 60 * 1000;
 
-      habits.forEach(habit => {
+      const filteredHabits = habits.filter(h => h.isArchived === showArchivedMode);
+
+      if(filteredHabits.length === 0) {
+        habitsList.innerHTML = `<p style="text-align:center; color:#6c7a86; padding: 20px;">No habits found here.</p>`;
+        return;
+      }
+
+      filteredHabits.forEach(habit => {
         let statusMessage = "Keep up the work! 🌱";
         if (habit.lastCompleted) {
           const daysPassed = Math.floor((today - new Date(habit.lastCompleted).setHours(0,0,0,0)) / oneDayInMs);
@@ -583,10 +640,13 @@
         const metrics = getMilestoneMetrics(habit.streak);
 
         const card = document.createElement('div');
-        card.className = 'habit-card';
+        card.className = `habit-card ${habit.isArchived ? 'archived-state':''}`;
         card.innerHTML = `
           <div class="habit-header">
-            <span class="habit-title">${habit.name}</span>
+            <span class="habit-title">
+              <span>${habit.emoji || '🎯'}</span> ${habit.name}
+              ${habit.isPrivate ? '<span class="privacy-indicator">🔒 Private</span>':''}
+            </span>
             <span class="streak-badge">🔥 ${habit.streak}</span>
           </div>
           <div class="milestone-container">
@@ -596,21 +656,65 @@
           <p class="motivation-msg">${statusMessage}</p>
           <div class="habit-actions">
             <button class="${isDoneToday ? 'btn-complete checked':'btn-complete'}" id="comp-${habit.id}">${isDoneToday ? '✓ Done':'Complete'}</button>
+            <button class="btn-edit" id="edt-${habit.id}">✏️ Edit</button>
             <button class="btn-analytics" id="anl-${habit.id}">📊 Chart</button>
             <button class="btn-calendar" id="cal-${habit.id}">📅 Calendar</button>
-            <button class="btn-delete" id="del-${habit.id}">Delete</button>
+            <button class="btn-archive" id="arc-${habit.id}">${habit.isArchived ? 'Unarchive' : 'Archive'}</button>
+            <button class="btn-delete" id="del-${habit.id}">❌</button>
           </div>
-          <div id="anl-box-${habit.id}"></div><div id="cal-box-${habit.id}"></div>
+          <div id="edt-box-${habit.id}"></div>
+          <div id="anl-box-${habit.id}"></div>
+          <div id="cal-box-${habit.id}"></div>
         `;
         habitsList.appendChild(card);
 
         document.getElementById(`comp-${habit.id}`).addEventListener('click', () => toggleCompleteHabit(habit.id));
+        document.getElementById(`edt-${habit.id}`).addEventListener('click', () => toggleEditorPanel(habit.id));
         document.getElementById(`anl-${habit.id}`).addEventListener('click', () => toggleAnalytics(habit.id));
         document.getElementById(`cal-${habit.id}`).addEventListener('click', () => toggleCalendar(habit.id));
+        document.getElementById(`arc-${habit.id}`).addEventListener('click', () => archiveHabit(habit.id));
         document.getElementById(`del-${habit.id}`).addEventListener('click', () => deleteHabit(habit.id));
 
+        if (habit.showEditor) renderEditorPanel(habit);
         if (habit.showAnalytics) renderAnalyticsPanel(habit);
         if (habit.showCalendar) renderCalendarPanel(habit);
+      });
+    }
+
+    function toggleEditorPanel(id) {
+      const h = habits.find(x => x.id === id);
+      h.showEditor = !h.showEditor;
+      renderHabits();
+    }
+
+    function renderEditorPanel(h) {
+      const targetDiv = document.getElementById(`edt-box-${h.id}`);
+      targetDiv.innerHTML = `
+        <div class="edit-panel">
+          <input type="text" id="edit-name-${h.id}" class="auth-input" value="${h.name}" style="padding:8px; font-size:0.9rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+            <select id="edit-emoji-${h.id}" style="background:#28333e; color:white; padding:6px; border-radius:6px; border:1px solid #374654; font-weight:bold;">
+              <option value="🎯" ${h.emoji === '🎯' ? 'selected':''}>🎯 Target</option>
+              <option value="🏃‍♂️" ${h.emoji === '🏃‍♂️' ? 'selected':''}>🏃‍♂️ Fitness</option>
+              <option value="🧠" ${h.emoji === '🧠' ? 'selected':''}>🧠 Mind</option>
+              <option value="💼" ${h.emoji === '💼' ? 'selected':''}>💼 Work</option>
+              <option value="🍏" ${h.emoji === '🍏' ? 'selected':''}>🍏 Health</option>
+            </select>
+            <label class="toggle-label">
+              <input type="checkbox" id="edit-privacy-${h.id}" ${h.isPrivate ? 'checked':''}> Private 🔒
+            </label>
+            <button class="submit-action-btn" id="edit-save-${h.id}" style="height:32px; padding:0 12px; font-size:0.85rem;">Save Save</button>
+          </div>
+        </div>
+      `;
+
+      document.getElementById(`edit-save-${h.id}`).addEventListener('click', () => {
+        h.name = document.getElementById(`edit-name-${h.id}`).value.trim();
+        h.emoji = document.getElementById(`edit-emoji-${h.id}`).value;
+        h.isPrivate = document.getElementById(`edit-privacy-${h.id}`).checked;
+        h.showEditor = false;
+        renderHabits();
+        saveHabitsToCloud();
       });
     }
 
@@ -683,7 +787,14 @@
       renderHabits();
     }
 
-    async function deleteHabit(id) { if(confirm("Delete habit?")) { habits = habits.filter(h => h.id !== id); renderHabits(); saveHabitsToCloud(); } }
+    function archiveHabit(id) {
+      const h = habits.find(x => x.id === id);
+      h.isArchived = !h.isArchived;
+      renderHabits();
+      saveHabitsToCloud();
+    }
+
+    async function deleteHabit(id) { if(confirm("Delete habit permanently?")) { habits = habits.filter(h => h.id !== id); renderHabits(); saveHabitsToCloud(); } }
     window.closeModal = function() { milestoneModal.classList.add('hidden'); }
   </script>
 </body>
