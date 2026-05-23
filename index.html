@@ -338,13 +338,14 @@
         </div>`;
     }
 
+    // Fixed function with zero broken components
     function toggleCalendar(id) { const h = habits.find(x => x.id === id); h.showCalendar = !h.showCalendar; renderHabits(); }
     function renderCalendarPanel(habit) {
       const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
       const totalDays = new Date(habit.viewYear, habit.viewMonth + 1, 0).getDate();
       const firstDay = new Date(habit.viewYear, habit.viewMonth, 1).getDay();
       
-      document.getElementById------------(---------).innerHTML = `
+      document.getElementById(`cal-box-${habit.id}`).innerHTML = `
         <div class="calendar-view">
           <div class="calendar-navbar">
             <button class="calendar-nav-btn" id="prev-${habit.id}">◀</button>
