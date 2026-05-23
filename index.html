@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HabitForge - Friends Network Pro</title>
+  <title>Habit Forge - Friends Network Pro</title>
   <style>
     body {
       background-color: #12161a;
@@ -38,10 +38,34 @@
       letter-spacing: -1px;
     }
 
-    .logo-area .subtitle {
-      color: #6c7a86;
-      margin: 2px 0 0 0;
-      font-size: 0.85rem;
+    /* Modern Dynamic Username Container */
+    .username-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .logo-area .user-handle-text {
+      color: #1cb0f6;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .copy-btn {
+      background-color: #28333e;
+      border: 1px solid #374654;
+      color: #a4b3c1;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.2s;
+    }
+    .copy-btn:hover {
+      background-color: #374654;
+      color: white;
     }
 
     /* Top-Right Profile Dropdown System */
@@ -57,7 +81,15 @@
       border-radius: 14px; width: 220px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); padding: 12px; z-index: 500;
     }
 
-    .dropdown-email { font-size: 0.85rem; color: #8495a5; word-break: break-all; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #28333e; font-weight: 600; }
+    .dropdown-user-info {
+      font-size: 0.85rem; color: #8495a5; word-break: break-all; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #28333e; font-weight: 600;
+    }
+    .dropdown-username-lbl {
+      color: #ff9800;
+      font-weight: 800;
+      font-size: 0.95rem;
+      margin-bottom: 3px;
+    }
     .dropdown-btn { width: 100%; background-color: transparent; border: 1px solid #ff4b4b; color: #ff4b4b; padding: 8px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
     .dropdown-btn:hover { background-color: #ff4b4b; color: white; }
 
@@ -144,14 +176,20 @@
     
     <div class="top-navbar">
       <div class="logo-area">
-        <div class="logo">🔥 HabitForge</div>
-        <p class="subtitle" id="user-display-handle">Privacy Friends Edition</p>
+        <div class="logo">🔥 Habit Forge</div>
+        <div class="username-container hidden" id="header-user-badge">
+          <span class="user-handle-text" id="user-display-handle">@username</span>
+          <button class="copy-btn" id="copy-username-btn">Copy 📋</button>
+        </div>
       </div>
       
       <div class="profile-system">
         <div class="avatar-btn" id="avatar-toggle-btn">?</div>
         <div class="profile-dropdown hidden" id="avatar-dropdown-box">
-          <div class="dropdown-email" id="dropdown-user-email">Not Signed In</div>
+          <div class="dropdown-user-info">
+            <div class="dropdown-username-lbl" id="dropdown-username-txt">@User</div>
+            <div id="dropdown-user-email">Not Signed In</div>
+          </div>
           <button class="dropdown-btn" id="logout-action-btn">Logout</button>
         </div>
       </div>
@@ -248,7 +286,12 @@
     const authSubmitBtn = document.getElementById('auth-submit-btn');
     const authToggleLink = document.getElementById('auth-toggle-link');
     const authToggleMsg = document.getElementById('auth-toggle-msg');
+    
+    // Header Refactor Binding Points
+    const headerUserBadge = document.getElementById('header-user-badge');
     const userDisplayHandle = document.getElementById('user-display-handle');
+    const copyUsernameBtn = document.getElementById('copy-username-btn');
+    const dropdownUsernameTxt = document.getElementById('dropdown-username-txt');
 
     const avatarToggleBtn = document.getElementById('avatar-toggle-btn');
     const avatarDropdownBox = document.getElementById('avatar-dropdown-box');
@@ -295,6 +338,15 @@
     avatarToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); avatarDropdownBox.classList.toggle('hidden'); });
     document.addEventListener('click', () => avatarDropdownBox.classList.add('hidden'));
 
+    // Copy Action Helper Function
+    copyUsernameBtn.addEventListener('click', () => {
+      if(!myUsername) return;
+      navigator.clipboard.writeText(`@${myUsername}`);
+      const baseText = copyUsernameBtn.innerText;
+      copyUsernameBtn.innerText = "Copied! ✓";
+      setTimeout(() => { copyUsernameBtn.innerText = baseText; }, 2000);
+    });
+
     // Toggle Login / Signup View
     authToggleLink.addEventListener('click', () => {
       isLoginMode = !isLoginMode;
@@ -317,12 +369,10 @@
         if (isLoginMode) {
           await signInWithEmailAndPassword(auth, email, password);
         } else {
-          // Check username availability first
           const nameCheck = await getDoc(doc(db, "usernames", username));
           if(nameCheck.exists()) { alert("Username already taken! Choose another."); return; }
 
           const credential = await createUserWithEmailAndPassword(auth, email, password);
-          // Reserve the unique username mapping identity
           await setDoc(doc(db, "usernames", username), { uid: credential.user.uid });
           await setDoc(doc(db, "users_habits", credential.user.uid), { habits: [], email: email, username: username, friends: [] });
         }
@@ -340,6 +390,7 @@
         await syncLoadHabitsFromCloud();
       } else {
         currentUser = null; habits = []; myFriendsList = [];
+        headerUserBadge.classList.add('hidden');
         dashboardView.classList.add('hidden'); authView.classList.remove('hidden');
       }
     });
@@ -360,9 +411,13 @@
       if (snap.exists()) {
         const data = snap.data();
         habits = data.habits || [];
-        myUsername = data.username || "User";
+        myUsername = data.username || "user";
         myFriendsList = data.friends || [];
+        
+        // Render identity metrics to interface headers
         userDisplayHandle.innerText = `@${myUsername}`;
+        dropdownUsernameTxt.innerText = `@${myUsername}`;
+        headerUserBadge.classList.remove('hidden');
         
         habits.forEach(h => {
           if (h.viewMonth === undefined) h.viewMonth = new Date().getMonth();
@@ -372,7 +427,7 @@
       }
     }
 
-    // 🔍 Real-Time Online Friends Network Lookup Engine
+    // Real-Time Friends Lookup
     friendSearchBtn.addEventListener('click', async () => {
       const targetQuery = friendSearchInput.value.trim().toLowerCase().replace('@', '');
       searchResultsZone.innerHTML = `<p style='color:#6c7a86;'>Searching platform databases...</p>`;
@@ -400,7 +455,7 @@
       } else { searchResultsZone.innerHTML = `<p style='color:#ea4335;'>User @${targetQuery} not found online.</p>`; }
     });
 
-    // 🔒 Privacy Friends List Builder (No habit names are leaked)
+    // Friends List Dashboard
     async function loadFriendsListUI() {
       friendsListZone.innerHTML = `<p style="color:#6c7a86; text-align:center;">Syncing live tracking channels...</p>`;
       if(myFriendsList.length === 0) {
@@ -415,7 +470,6 @@
           const fData = friendSnap.data();
           const fName = fData.username || "Anonymous";
           const fHabits = fData.habits || [];
-          // Privacy calculation: Sum total lifetime checked milestones without naming the single habits
           const aggregateScore = fHabits.reduce((acc, h) => acc + (h.history ? h.history.length : 0), 0);
           
           completeNetworkHTML += `
