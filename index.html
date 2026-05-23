@@ -84,7 +84,7 @@
 
     .profile-dropdown {
       position: absolute; top: 50px; right: 0; background-color: #1a2229; border: 2px solid #28333e;
-      border-radius: 14px; width: 220px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); padding: 12px; z-index: 500;
+      border-radius: 14px; width: 240px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); padding: 12px; z-index: 500;
     }
 
     .dropdown-user-info {
@@ -96,8 +96,10 @@
       font-size: 0.95rem;
       margin-bottom: 3px;
     }
-    .dropdown-btn { width: 100%; background-color: transparent; border: 1px solid #ff4b4b; color: #ff4b4b; padding: 8px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
+    .dropdown-btn { width: 100%; background-color: transparent; border: 1px solid #ff4b4b; color: #ff4b4b; padding: 8px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.9rem; margin-top: 5px; }
     .dropdown-btn:hover { background-color: #ff4b4b; color: white; }
+    .dropdown-btn.upgrade-btn { border-color: #58cc02; color: #58cc02; }
+    .dropdown-btn.upgrade-btn:hover { background-color: #58cc02; color: white; }
 
     /* Auth Card Form Layout */
     .auth-card {
@@ -114,7 +116,10 @@
     .auth-btn {
       width: 100%; background-color: #1cb0f6; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 0 #1899d6; margin-top: 10px; margin-bottom: 15px;
     }
+    .auth-btn.guest-btn { background-color: #4b5a6a; box-shadow: 0 4px 0 #374654; margin-top: 5px; }
+    
     .auth-toggle-link { color: #1cb0f6; cursor: pointer; font-size: 0.9rem; text-decoration: underline; }
+    .forgot-password-link { display: block; text-align: right; margin-top: 5px; font-size: 0.85rem; color: #a4b3c1; cursor: pointer; text-decoration: underline; }
 
     /* Navigation Tabs */
     .view-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
@@ -235,6 +240,7 @@
             <div class="dropdown-username-lbl" id="dropdown-username-txt">@User</div>
             <div id="dropdown-user-email">Not Signed In</div>
           </div>
+          <button class="dropdown-btn upgrade-btn hidden" id="dropdown-upgrade-account-btn">🔒 Save Guest Data</button>
           <button class="dropdown-btn" id="logout-action-btn">Logout</button>
         </div>
       </div>
@@ -252,11 +258,21 @@
         <label>Email Address</label>
         <input type="email" id="auth-email" class="auth-input" placeholder="name@example.com">
       </div>
+      
       <div class="auth-group">
         <label>Password</label>
         <input type="password" id="auth-password" class="auth-input" placeholder="••••••••">
+        <span class="forgot-password-link" id="auth-forgot-password-trigger">Forgot Password?</span>
       </div>
+
+      <div class="auth-group hidden" id="confirm-password-group">
+        <label>Confirm Password</label>
+        <input type="password" id="auth-confirm-password" class="auth-input" placeholder="••••••••">
+      </div>
+
       <button id="auth-submit-btn" class="auth-btn">Sign In</button>
+      <button id="auth-guest-btn" class="auth-btn guest-btn">Continue as Guest 👤</button>
+      
       <p><span id="auth-toggle-msg">New to HabitForge?</span> <span id="auth-toggle-link" class="auth-toggle-link">Create an account</span></p>
     </div>
 
@@ -326,7 +342,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, signInAnonymously, linkWithCredential, EmailAuthProvider, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -348,10 +364,14 @@
     const dashboardView = document.getElementById('dashboard-view');
     const authTitle = document.getElementById('auth-title');
     const usernameRegisterGroup = document.getElementById('username-register-group');
+    const confirmPasswordGroup = document.getElementById('confirm-password-group');
     const authUsername = document.getElementById('auth-username');
     const authEmail = document.getElementById('auth-email');
     const authPassword = document.getElementById('auth-password');
+    const authConfirmPassword = document.getElementById('auth-confirm-password');
     const authSubmitBtn = document.getElementById('auth-submit-btn');
+    const authGuestBtn = document.getElementById('auth-guest-btn');
+    const authForgotPswTrigger = document.getElementById('auth-forgot-password-trigger');
     const authToggleLink = document.getElementById('auth-toggle-link');
     const authToggleMsg = document.getElementById('auth-toggle-msg');
     
@@ -360,6 +380,7 @@
     const userDisplayLevel = document.getElementById('user-display-level');
     const copyUsernameBtn = document.getElementById('copy-username-btn');
     const dropdownUsernameTxt = document.getElementById('dropdown-username-txt');
+    const dropdownUpgradeAccountBtn = document.getElementById('dropdown-upgrade-account-btn');
 
     const avatarToggleBtn = document.getElementById('avatar-toggle-btn');
     const avatarDropdownBox = document.getElementById('avatar-dropdown-box');
@@ -418,7 +439,7 @@
     });
 
     copyUsernameBtn.addEventListener('click', () => {
-      if(!myUsername || myUsername === "user") return;
+      if(!myUsername || myUsername === "guest") return;
       navigator.clipboard.writeText(`@${myUsername}`);
       const baseText = copyUsernameBtn.innerText;
       copyUsernameBtn.innerText = "Copied! ✓";
@@ -431,28 +452,94 @@
       authSubmitBtn.innerText = isLoginMode ? "Sign In" : "Sign Up & Sync";
       authToggleMsg.innerText = isLoginMode ? "New to HabitForge?" : "Already have an account?";
       authToggleLink.innerText = isLoginMode ? "Create an account" : "Log in here";
-      if(isLoginMode) usernameRegisterGroup.classList.add('hidden');
-      else usernameRegisterGroup.classList.remove('hidden');
+      
+      if(isLoginMode) {
+        usernameRegisterGroup.classList.add('hidden');
+        confirmPasswordGroup.classList.add('hidden');
+        authForgotPswTrigger.classList.remove('hidden');
+      } else {
+        usernameRegisterGroup.classList.remove('hidden');
+        confirmPasswordGroup.classList.remove('hidden');
+        authForgotPswTrigger.classList.add('hidden');
+      }
+    });
+
+    // Password Recovery Flow
+    authForgotPswTrigger.addEventListener('click', async () => {
+      const email = authEmail.value.trim();
+      if(!email) {
+        alert("Please enter your email address first so we know where to send the recovery link.");
+        return;
+      }
+      try {
+        await sendPasswordResetEmail(auth, email);
+        alert(`📬 Secure verification link sent to ${email}. Check your inbox or spam folder to update your password instantly!`);
+      } catch (e) {
+        alert("Could not process password recovery request: " + e.message);
+      }
+    });
+
+    // Guest Authentication Execution
+    authGuestBtn.addEventListener('click', async () => {
+      try {
+        await signInAnonymously(auth);
+      } catch(e) {
+        alert("Guest verification server failed: " + e.message);
+      }
+    });
+
+    // Handle Profile Upgrade Triggering
+    dropdownUpgradeAccountBtn.addEventListener('click', () => {
+      avatarDropdownBox.classList.add('hidden');
+      dashboardView.classList.add('hidden');
+      authView.classList.remove('hidden');
+      
+      // Force panel context to sign-up configuration
+      isLoginMode = false;
+      authTitle.innerText = "Upgrade Guest Account";
+      authSubmitBtn.innerText = "Secure Data & Upgrade";
+      usernameRegisterGroup.classList.remove('hidden');
+      confirmPasswordGroup.classList.remove('hidden');
+      authForgotPswTrigger.classList.add('hidden');
     });
 
     authSubmitBtn.addEventListener('click', async () => {
-      const email = authEmail.value.trim(); const password = authPassword.value;
+      const email = authEmail.value.trim(); 
+      const password = authPassword.value;
+      const confirmPassword = authConfirmPassword.value;
       const username = authUsername.value.trim().toLowerCase().replace('@', '');
       
       if (!email || !password) { alert("Please fill out all fields."); return; }
-      if (!isLoginMode && !username) { alert("Please pick a username."); return; }
+      if (!isLoginMode) {
+        if(!username) { alert("Please pick a unique username."); return; }
+        if(password !== confirmPassword) { alert("Passwords do not match. Please verify."); return; }
+      }
 
       try {
         if (isLoginMode) {
+          // Standard login logic
           await signInWithEmailAndPassword(auth, email, password);
         } else {
+          // Check username availability
           const nameCheck = await getDoc(doc(db, "usernames", username));
           if(nameCheck.exists()) { alert("Username already taken! Choose another."); return; }
 
-          myUsername = username;
-          const credential = await createUserWithEmailAndPassword(auth, email, password);
-          await setDoc(doc(db, "usernames", username), { uid: credential.user.uid });
-          await setDoc(doc(db, "users_habits", credential.user.uid), { habits: [], email: email, username: username, friends: [] });
+          // Account Conversion / Upgrading Logic
+          if(auth.currentUser && auth.currentUser.isAnonymous) {
+            const credential = EmailAuthProvider.credential(email, password);
+            await linkWithCredential(auth.currentUser, credential);
+            
+            myUsername = username;
+            await setDoc(doc(db, "usernames", username), { uid: auth.currentUser.uid });
+            await saveHabitsToCloud();
+            alert("🎉 Your guest profile and habits have been linked successfully to your new permanent account!");
+          } else {
+            // Standard registration logic if no guest session exists
+            myUsername = username;
+            const credential = await createUserWithEmailAndPassword(auth, email, password);
+            await setDoc(doc(db, "usernames", username), { uid: credential.user.uid });
+            await setDoc(doc(db, "users_habits", credential.user.uid), { habits: [], email: email, username: username, friends: [] });
+          }
         }
       } catch (e) { alert(e.message); }
     });
@@ -462,14 +549,31 @@
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         currentUser = user;
-        dropdownUserEmail.innerText = user.email;
-        authView.classList.add('hidden'); dashboardView.classList.remove('hidden');
-        await syncLoadHabitsFromCloud();
+        authView.classList.add('hidden'); 
+        dashboardView.classList.remove('hidden');
+        
+        if(user.isAnonymous) {
+          dropdownUserEmail.innerText = "Guest Session Mode";
+          myUsername = "guest";
+          userDisplayHandle.innerText = "👤 Anonymous Guest";
+          dropdownUsernameTxt.innerText = "Guest Profile";
+          avatarToggleBtn.innerText = "G";
+          copyUsernameBtn.classList.add('hidden');
+          dropdownUpgradeAccountBtn.classList.remove('hidden');
+          headerUserBadge.classList.remove('hidden');
+          renderHabits();
+        } else {
+          dropdownUserEmail.innerText = user.email;
+          copyUsernameBtn.classList.remove('hidden');
+          dropdownUpgradeAccountBtn.classList.add('hidden');
+          await syncLoadHabitsFromCloud();
+        }
       } else {
         currentUser = null; habits = []; myFriendsList = []; myUsername = "";
         avatarToggleBtn.innerText = "?";
         headerUserBadge.classList.add('hidden');
-        dashboardView.classList.add('hidden'); authView.classList.remove('hidden');
+        dashboardView.classList.add('hidden'); 
+        authView.classList.remove('hidden');
       }
     });
 
@@ -477,7 +581,7 @@
       if (!currentUser) return;
       try {
         await setDoc(doc(db, "users_habits", currentUser.uid), { 
-          habits: habits, email: currentUser.email, username: myUsername, friends: myFriendsList 
+          habits: habits, email: currentUser.email || "guest", username: myUsername, friends: myFriendsList 
         });
         updateUserLevelDisplay();
       } catch (error) { console.error("Database sync failed:", error); }
@@ -496,7 +600,7 @@
         const data = snap.data();
         habits = data.habits || [];
         myFriendsList = data.friends || [];
-        myUsername = data.username || "";
+        myUsername = data.username || "user";
         
         userDisplayHandle.innerText = `@${myUsername}`;
         dropdownUsernameTxt.innerText = `@${myUsername}`;
@@ -515,10 +619,16 @@
 
         updateUserLevelDisplay();
         renderHabits();
+      } else if (currentUser.isAnonymous) {
+        // Fallback initialized for guest tracks
+        updateUserLevelDisplay();
+        renderHabits();
       }
     }
 
     friendSearchBtn.addEventListener('click', async () => {
+      if (currentUser.isAnonymous) { alert("Social networking channels require a verified account profiles. Upgrade to permanent account to unlock!"); return; }
+      
       const targetQuery = friendSearchInput.value.trim().toLowerCase().replace('@', '');
       searchResultsZone.innerHTML = `<p style='color:#6c7a86;'>Searching platform databases...</p>`;
       
@@ -558,6 +668,10 @@
     });
 
     async function loadFriendsListUI() {
+      if (currentUser.isAnonymous) {
+        friendsListZone.innerHTML = `<p style="color:#6c7a86; text-align:center; padding:10px;">⚠️ Friends panel requires upgrading from a guest profile.</p>`;
+        return;
+      }
       friendsListZone.innerHTML = `<p style="color:#6c7a86; text-align:center;">Syncing live tracking channels...</p>`;
       if(myFriendsList.length === 0) {
         friendsListZone.innerHTML = `<p style="color:#6c7a86; text-align:center;">Your friends network is currently empty.</p>`;
@@ -658,8 +772,6 @@
 
         const isDoneToday = habit.lastCompleted && new Date(habit.lastCompleted).setHours(0,0,0,0) === today;
         const metrics = getMilestoneMetrics(habit.streak);
-        
-        // Uses globe icon for public, lock icon for private
         const privacyIconText = habit.isPrivate ? '🔒' : '🌐';
 
         const card = document.createElement('div');
