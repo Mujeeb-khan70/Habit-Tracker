@@ -3,118 +3,782 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HabitForge Pro</title>
+  <title>HabitForge - Social Analytics Pro</title>
   <style>
-    body { background-color: #12161a; color: #f0f3f5; font-family: sans-serif; margin: 0; display: flex; justify-content: center; padding: 20px; }
-    .app-container { width: 100%; max-width: 500px; }
-    .top-navbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-    .avatar-btn { width: 42px; height: 42px; border-radius: 50%; background-color: #ff9800; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; }
-    .hidden { display: none !important; }
-    .habit-card { background-color: #1a2229; border-radius: 20px; padding: 20px; margin-bottom: 16px; border: 1px solid #28333e; }
-    .progress-track { width: 100%; height: 8px; background-color: #11171d; border-radius: 10px; overflow: hidden; margin: 10px 0; }
-    .progress-fill { height: 100%; background: #ff9800; width: 0%; transition: width 0.3s; }
-    .calendar-navbar { display: flex; justify-content: space-between; padding: 10px; align-items: center; }
+    body {
+      background-color: #12161a;
+      color: #f0f3f5;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 500px;
+      padding-top: 20px;
+      position: relative;
+    }
+
+    /* Fixed Navigation Header Layout */
+    .top-navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      position: relative;
+    }
+
+    .logo-area {
+      text-align: left;
+    }
+
+    .logo-area .logo {
+      color: #ff9800;
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .logo-area .subtitle {
+      color: #6c7a86;
+      margin: 2px 0 0 0;
+      font-size: 0.85rem;
+    }
+
+    /* Top-Right Profile Dropdown System */
+    .profile-system {
+      position: relative;
+    }
+
+    .avatar-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background-color: #ff9800;
+      color: #12161a;
+      font-weight: bold;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: 2px solid #28333e;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      user-select: none;
+    }
+
+    .profile-dropdown {
+      position: absolute;
+      top: 50px;
+      right: 0;
+      background-color: #1a2229;
+      border: 2px solid #28333e;
+      border-radius: 14px;
+      width: 220px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      padding: 12px;
+      z-index: 500;
+    }
+
+    .dropdown-email {
+      font-size: 0.85rem;
+      color: #8495a5;
+      word-break: break-all;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #28333e;
+      font-weight: 600;
+    }
+
+    .dropdown-btn {
+      width: 100%;
+      background-color: transparent;
+      border: 1px solid #ff4b4b;
+      color: #ff4b4b;
+      padding: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+    .dropdown-btn:hover {
+      background-color: #ff4b4b;
+      color: white;
+    }
+
+    /* Auth Card Form Layout */
+    .auth-card {
+      background-color: #1a2229;
+      padding: 30px;
+      border-radius: 24px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      border: 2px solid #28333e;
+      text-align: center;
+    }
+
+    .auth-card h2 { margin-top: 0; margin-bottom: 20px; font-size: 1.5rem; }
+    .auth-group { margin-bottom: 15px; text-align: left; }
+    .auth-group label { display: block; font-size: 0.85rem; color: #8495a5; margin-bottom: 5px; font-weight: 600; }
+    
+    .auth-input {
+      width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #28333e;
+      background-color: #11171d; color: white; font-size: 1rem; outline: none; box-sizing: border-box;
+    }
+    .auth-input:focus { border-color: #1cb0f6; }
+
+    .auth-btn {
+      width: 100%; background-color: #1cb0f6; color: white; border: none; padding: 14px;
+      border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer;
+      box-shadow: 0 4px 0 #1899d6; margin-top: 10px; margin-bottom: 15px;
+    }
+    .auth-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #1899d6; }
+    .auth-toggle-link { color: #1cb0f6; cursor: pointer; font-size: 0.9rem; text-decoration: underline; }
+
+    /* Navigation Tabs */
+    .view-tabs {
+      display: flex; gap: 10px; margin-bottom: 20px;
+    }
+    .tab-btn {
+      flex: 1; padding: 12px; border-radius: 12px; border: none; background-color: #1a2229;
+      color: #8495a5; font-weight: bold; cursor: pointer; transition: 0.2s; border: 1px solid #28333e;
+    }
+    .tab-btn.active {
+      background-color: #28333e; color: #ff9800; border-color: #ff9800;
+    }
+
+    /* Shared Action Layouts */
+    .action-panel-card {
+      background-color: #1a2229; padding: 15px; border-radius: 20px; margin-bottom: 25px; border: 1px solid #28333e;
+    }
+    .flex-form { display: flex; gap: 10px; }
+    .flex-form input[type="text"] {
+      flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #28333e; background-color: #11171d; color: white; font-size: 1rem; outline: none;
+    }
+    .submit-action-btn {
+      background-color: #58cc02; color: white; border: none; padding: 0 20px; border-radius: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #46a302;
+    }
+
+    /* Habit Card Layout with Progress Bars */
+    .habit-card {
+      background-color: #1a2229; border-radius: 20px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 2px solid #28333e;
+    }
+    .habit-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .habit-title { font-size: 1.25rem; font-weight: 700; color: #ffffff; }
+    .streak-badge { font-size: 1.3rem; font-weight: 800; color: #ff9600; background-color: #2e271d; padding: 4px 12px; border-radius: 12px; }
+    
+    /* Milestone Component Layout */
+    .milestone-container {
+      margin-top: 10px;
+      margin-bottom: 18px;
+    }
+    .milestone-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: #a4b3c1;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .progress-track {
+      width: 100%;
+      height: 8px;
+      background-color: #11171d;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #252f38;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff9800, #ffb74d);
+      width: 0%;
+      border-radius: 10px;
+      transition: width 0.4s ease;
+    }
+    .motivation-msg { font-size: 0.85rem; color: #6c7a86; margin: 0 0 15px 0; }
+
+    .habit-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .habit-actions button { flex: 1; min-width: 70px; border: none; padding: 10px; border-radius: 10px; font-weight: bold; font-size: 0.85rem; cursor: pointer; }
+    
+    .btn-complete { background-color: #1cb0f6; color: white; box-shadow: 0 4px 0 #1899d6; }
+    .btn-complete.checked { background-color: #58cc02; box-shadow: 0 4px 0 #46a302; }
+    .btn-analytics { background-color: #ff9800; color: white; }
+    .btn-calendar { background-color: #784bc4; color: white; }
+    .btn-delete { background-color: #ea4335; color: white; }
+
+    /* Analytics Panel Styles */
+    .analytics-panel {
+      margin-top: 15px; background-color: #11171d; padding: 15px; border-radius: 12px; border: 1px solid #28333e;
+    }
+    .analytics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center; margin-top: 10px; }
+    .metric-box { background-color: #1a2229; padding: 10px; border-radius: 8px; border: 1px solid #28333e; }
+    .metric-val { font-size: 1.2rem; font-weight: bold; color: #1cb0f6; }
+    .metric-lbl { font-size: 0.75rem; color: #6c7a86; text-transform: uppercase; margin-top: 3px; }
+
+    /* Social Group Styles */
+    .group-card {
+      background-color: #1a2229; padding: 20px; border-radius: 20px; border: 2px solid #784bc4; margin-bottom: 20px;
+    }
+    .group-id-tag { background-color: #11171d; padding: 6px 12px; border-radius: 6px; font-family: monospace; font-size: 1rem; color: #ff9800; display: inline-block; margin-bottom: 15px; }
+    .leaderboard-list { margin-top: 15px; }
+    .leaderboard-row { display: flex; justify-content: space-between; padding: 12px; background-color: #11171d; margin-bottom: 6px; border-radius: 8px; border-left: 4px solid #784bc4; }
+    .leaderboard-user { font-weight: bold; color: white; }
+    .leaderboard-score { color: #ff9800; font-weight: 800; }
+
+    /* Calendar Grid Layout */
+    .calendar-view { margin-top: 15px; background-color: #11171d; padding: 15px; border-radius: 12px; border: 1px solid #28333e; }
+    .calendar-navbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 5px; }
+    .calendar-nav-btn { background-color: #28333e; color: #f0f3f5; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    .calendar-nav-btn:hover { background-color: #374654; }
     .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
-    .calendar-cell { padding: 5px; background: #28333e; border-radius: 4px; font-size: 0.8rem; }
-    .calendar-cell.completed { background: #58cc02; }
-    .auth-card { background: #1a2229; padding: 30px; border-radius: 24px; text-align: center; }
-    .auth-input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #28333e; background: #11171d; color: white; }
-    .auth-btn { width: 100%; padding: 14px; background: #1cb0f6; border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; }
+    .calendar-day-label { font-size: 0.75rem; color: #6c7a86; font-weight: bold; padding-bottom: 4px; }
+    .calendar-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; background-color: #1a2229; color: #526575; border-radius: 6px; }
+    .calendar-cell.completed { background-color: #58cc02; color: white; }
+    .calendar-cell.empty { background-color: transparent; }
+
+    /* Modal Styling */
+    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(10, 14, 18, 0.9); display: flex; justify-content: center; align-items: center; z-index: 2000; }
+    .modal-content { background-color: #1a2229; padding: 35px; border-radius: 28px; text-align: center; border: 3px solid #ff9600; max-width: 340px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .modal-close-btn { background-color: #58cc02; color: white; border: none; padding: 12px 35px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 15px; box-shadow: 0 4px 0 #46a302; }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
 
   <div class="app-container">
+    
     <div class="top-navbar">
-      <h2>🔥 HabitForge</h2>
-      <div class="avatar-btn" id="avatar-btn">U</div>
+      <div class="logo-area">
+        <div class="logo">🔥 HabitForge</div>
+        <p class="subtitle">Analytics & Social Squad Edition</p>
+      </div>
+      
+      <div class="profile-system" id="profile-container">
+        <div class="avatar-btn" id="avatar-toggle-btn">?</div>
+        <div class="profile-dropdown hidden" id="avatar-dropdown-box">
+          <div class="dropdown-email" id="dropdown-user-email">Not Signed In</div>
+          <button class="dropdown-btn" id="logout-action-btn">Logout</button>
+        </div>
+      </div>
     </div>
 
     <div id="auth-view" class="auth-card">
-      <input type="email" id="auth-email" class="auth-input" placeholder="Email">
-      <input type="password" id="auth-password" class="auth-input" placeholder="Password">
-      <button id="auth-btn" class="auth-btn">Sign In</button>
+      <h2 id="auth-title">Log In to Your Account</h2>
+      <div class="auth-group">
+        <label>Email Address</label>
+        <input type="email" id="auth-email" class="auth-input" placeholder="name@example.com">
+      </div>
+      <div class="auth-group">
+        <label>Password</label>
+        <input type="password" id="auth-password" class="auth-input" placeholder="••••••••">
+      </div>
+      <button id="auth-submit-btn" class="auth-btn">Sign In</button>
+      <p><span id="auth-toggle-msg">New to HabitForge?</span> <span id="auth-toggle-link" class="auth-toggle-link">Create an account</span></p>
     </div>
 
     <div id="dashboard-view" class="hidden">
-      <div id="habits-list"></div>
+      <div class="view-tabs">
+        <button id="tab-habits" class="tab-btn active">⚡ My Habits</button>
+        <button id="tab-social" class="tab-btn">👥 Social Squads</button>
+      </div>
+
+      <div id="panel-habits">
+        <div class="action-panel-card">
+          <form id="habit-form" class="flex-form">
+            <input type="text" id="habit-input" placeholder="⚡ Enter new habit (e.g. Read 30 mins)..." required>
+            <button type="submit" class="submit-action-btn">Add +</button>
+          </form>
+        </div>
+        <div id="habits-list"></div>
+      </div>
+
+      <div id="panel-social" class="hidden">
+        <div class="action-panel-card">
+          <h3 style="margin-top:0; margin-bottom:10px;">Create a Squad Challenge</h3>
+          <form id="create-group-form" class="flex-form">
+            <input type="text" id="create-group-input" placeholder="🏆 Challenge Name (e.g., Fitness Pros)" required>
+            <button type="submit" class="submit-action-btn" style="background-color:#784bc4; box-shadow:0 4px 0 #5b3699;">Build Squad</button>
+          </form>
+          
+          <h3 style="margin-top:20px; margin-bottom:10px;">Join an Existing Squad</h3>
+          <form id="join-group-form" class="flex-form">
+            <input type="text" id="join-group-input" placeholder="🔑 Paste Squad Code Here..." required>
+            <button type="submit" class="submit-action-btn" style="background-color:#ff9800; box-shadow:0 4px 0 #cc7a00;">Join Squad</button>
+          </form>
+        </div>
+        <div id="active-squad-zone"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="milestone-modal" class="modal hidden">
+    <div class="modal-content">
+      <div style="font-size: 4.5rem; margin-bottom: 12px;">🏆</div>
+      <h2 style="color: #ff9800; margin: 0 0 10px 0; font-size: 1.8rem;">MILESTONE CRUSHED!</h2>
+      <p id="milestone-text" style="color: #f0f3f5; font-size: 1.1rem; line-height: 1.5; margin-bottom: 20px;"></p>
+      <button class="modal-close-btn" onclick="closeModal()">Keep It Up! 🔥</button>
     </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
-  apiKey: "AIzaSyBN1YdLiD9GaxS9b0wvzvPnixYGe7vhjbk",
-  authDomain: "habit-tracker-937ca.firebaseapp.com",
-  projectId: "habit-tracker-937ca",
-  storageBucket: "habit-tracker-937ca.firebasestorage.app",
-  messagingSenderId: "667829126838",
-  appId: "1:667829126838:web:fb5f436362b777e58e0817",
-  measurementId: "G-WCHFVVNZX1"
-};
+      apiKey: "AIzaSyBN1YdLiD9GaxS9b0wvzvPnixYGe7vhjbk",
+      authDomain: "habit-tracker-937ca.firebaseapp.com",
+      projectId: "habit-tracker-937ca",
+      storageBucket: "habit-tracker-937ca.firebasestorage.app",
+      messagingSenderId: "667829126838",
+      appId: "1:667829126838:web:fb5f436362b777e58e0817",
+      measurementId: "G-WCHFVVNZX1"
+    };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    const MILESTONES = [7, 21, 30, 70, 100, 150, 200, 300, 375, 500, 1000];
+
+    // Global Interactive Selectors
+    const authView = document.getElementById('auth-view');
+    const dashboardView = document.getElementById('dashboard-view');
+    const authTitle = document.getElementById('auth-title');
+    const authEmail = document.getElementById('auth-email');
+    const authPassword = document.getElementById('auth-password');
+    const authSubmitBtn = document.getElementById('auth-submit-btn');
+    const authToggleLink = document.getElementById('auth-toggle-link');
+    const authToggleMsg = document.getElementById('auth-toggle-msg');
+    
+    const avatarToggleBtn = document.getElementById('avatar-toggle-btn');
+    const avatarDropdownBox = document.getElementById('avatar-dropdown-box');
+    const dropdownUserEmail = document.getElementById('dropdown-user-email');
+    const logoutActionBtn = document.getElementById('logout-action-btn');
+
+    const tabHabits = document.getElementById('tab-habits');
+    const tabSocial = document.getElementById('tab-social');
+    const panelHabits = document.getElementById('panel-habits');
+    const panelSocial = document.getElementById('panel-social');
+
+    const habitForm = document.getElementById('habit-form');
+    const habitInput = document.getElementById('habit-input');
+    const habitsList = document.getElementById('habits-list');
+
+    const createGroupForm = document.getElementById('create-group-form');
+    const createGroupInput = document.getElementById('create-group-input');
+    const joinGroupForm = document.getElementById('join-group-form');
+    const joinGroupInput = document.getElementById('join-group-input');
+    const activeSquadZone = document.getElementById('active-squad-zone');
+
+    const milestoneModal = document.getElementById('milestone-modal');
+    const milestoneText = document.getElementById('milestone-text');
 
     let habits = [];
-    
-    // Auth Logic
-    document.getElementById('auth-btn').addEventListener('click', async () => {
+    let currentUser = null;
+    let isLoginMode = true;
+    let groupData = null;
+
+    const todayGlobal = new Date();
+    const currentYearGlobal = todayGlobal.getFullYear();
+    const currentMonthGlobal = todayGlobal.getMonth();
+
+    // Milepost Tier Reference Mapping Array
+    const MILESTONE_TIERS = [7, 21, 30, 70, 100, 150, 200, 300, 375, 500, 1000];
+
+    // Navigation Tab Controller
+    tabHabits.addEventListener('click', () => {
+      tabHabits.classList.add('active'); tabSocial.classList.remove('active');
+      panelHabits.classList.remove('hidden'); panelSocial.classList.add('hidden');
+    });
+
+    tabSocial.addEventListener('click', () => {
+      tabSocial.classList.add('active'); tabHabits.classList.remove('active');
+      panelSocial.classList.remove('hidden'); panelHabits.classList.add('hidden');
+      syncLoadGroupFromCloud();
+    });
+
+    // Top Right Menu Interaction Core
+    avatarToggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      avatarDropdownBox.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', () => {
+      avatarDropdownBox.classList.add('hidden');
+    });
+
+    // Toggle Login View Layout
+    authToggleLink.addEventListener('click', () => {
+      isLoginMode = !isLoginMode;
+      authTitle.innerText = isLoginMode ? "Log In to Your Account" : "Create Your Free Account";
+      authSubmitBtn.innerText = isLoginMode ? "Sign In" : "Sign Up & Sync";
+      authToggleMsg.innerText = isLoginMode ? "New to HabitForge?" : "Already have an account?";
+      authToggleLink.innerText = isLoginMode ? "Create an account" : "Log in here";
+    });
+
+    authSubmitBtn.addEventListener('click', async () => {
+      const email = authEmail.value.trim(); const password = authPassword.value;
+      if (!email || !password) { alert("Please fill out all fields."); return; }
       try {
-        await signInWithEmailAndPassword(auth, document.getElementById('auth-email').value, document.getElementById('auth-password').value);
+        if (isLoginMode) { await signInWithEmailAndPassword(auth, email, password); }
+        else { await createUserWithEmailAndPassword(auth, email, password); }
       } catch (e) { alert(e.message); }
     });
 
-    onAuthStateChanged(auth, (user) => {
+    logoutActionBtn.addEventListener('click', () => signOut(auth));
+
+    onAuthStateChanged(auth, async (user) => {
       if (user) {
-        document.getElementById('auth-view').classList.add('hidden');
-        document.getElementById('dashboard-view').classList.remove('hidden');
-        loadData();
+        currentUser = user; 
+        dropdownUserEmail.innerText = user.email;
+        avatarToggleBtn.innerText = user.email.charAt(0).toUpperCase();
+        authView.classList.add('hidden'); dashboardView.classList.remove('hidden');
+        await syncLoadHabitsFromCloud();
+      } else {
+        currentUser = null; habits = []; groupData = null;
+        dropdownUserEmail.innerText = "Not Signed In";
+        avatarToggleBtn.innerText = "?";
+        dashboardView.classList.add('hidden'); authView.classList.remove('hidden');
       }
     });
 
-    async function loadData() {
-      const snap = await getDoc(doc(db, "users_habits", auth.currentUser.uid));
+    // Cloud DB Synchronizers
+    async function saveHabitsToCloud() {
+      if (!currentUser) return;
+      await setDoc(doc(db, "users_habits", currentUser.uid), { habits: habits, email: currentUser.email });
+      await syncUpdateGroupMetrics();
+    }
+
+    async function syncLoadHabitsFromCloud() {
+      if (!currentUser) return;
+      const snap = await getDoc(doc(db, "users_habits", currentUser.uid));
+      habits = snap.exists() ? (snap.data().habits || []) : [];
+      // Ensure time properties exist on load
+      habits.forEach(h => {
+        if (h.viewMonth === undefined) h.viewMonth = currentMonthGlobal;
+        if (h.viewYear === undefined) h.viewYear = currentYearGlobal;
+      });
+      renderHabits();
+    }
+
+    // Social Group Managers
+    createGroupForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const squadName = createGroupInput.value.trim();
+      const randomSquadId = "SQ-" + Math.floor(100000 + Math.random() * 900000);
+      
+      const newGroupObj = {
+        squadId: randomSquadId,
+        name: squadName,
+        members: [{ uid: currentUser.uid, email: currentUser.email, totalScore: calculateAccumulatedScore() }]
+      };
+
+      await setDoc(doc(db, "groups", randomSquadId), newGroupObj);
+      localStorage.setItem(`squad_cache_${currentUser.uid}`, randomSquadId);
+      createGroupInput.value = '';
+      await syncLoadGroupFromCloud();
+    });
+
+    joinGroupForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const code = joinGroupInput.value.trim();
+      const docRef = doc(db, "groups", code);
+      const snap = await getDoc(docRef);
+
       if (snap.exists()) {
-        habits = snap.data().habits.map(h => ({ ...h, viewMonth: new Date().getMonth(), viewYear: new Date().getFullYear() }));
-        render();
+        let currentMembers = snap.data().members || [];
+        if (!currentMembers.some(m => m.uid === currentUser.uid)) {
+          currentMembers.push({ uid: currentUser.uid, email: currentUser.email, totalScore: calculateAccumulatedScore() });
+          await updateDoc(docRef, { members: currentMembers });
+        }
+        localStorage.setItem(`squad_cache_${currentUser.uid}`, code);
+        joinGroupInput.value = '';
+        await syncLoadGroupFromCloud();
+      } else {
+        alert("Squad Code invalid!");
+      }
+    });
+
+    async function syncLoadGroupFromCloud() {
+      if (!currentUser) return;
+      const cachedId = localStorage.setItem ? localStorage.getItem(`squad_cache_${currentUser.uid}`) : null;
+      
+      if (!cachedId) {
+        activeSquadZone.innerHTML = `<p style="color:#6c7a86; text-align:center;">You aren't in any social squads yet. Create one or join your friend's room above!</p>`;
+        return;
+      }
+
+      const querySampleSnap = await getDoc(doc(db, "groups", cachedId));
+      if (querySampleSnap.exists()) {
+        groupData = querySampleSnap.data();
+        renderGroupDashboard();
+      } else {
+        activeSquadZone.innerHTML = `<p style="color:#6c7a86; text-align:center;">You aren't in any social squads yet. Create one or join your friend's room above!</p>`;
       }
     }
 
-    window.changeMonth = (id, delta) => {
-      const h = habits.find(x => x.id === id);
-      h.viewMonth += delta;
-      if (h.viewMonth > 11) { h.viewMonth = 0; h.viewYear++; }
-      else if (h.viewMonth < 0) { h.viewMonth = 11; h.viewYear--; }
-      render();
-    };
+    async function syncUpdateGroupMetrics() {
+      if (!currentUser) return;
+      const cachedId = localStorage.getItem(`squad_cache_${currentUser.uid}`);
+      if (!cachedId) return;
+      const docRef = doc(db, "groups", cachedId);
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        let members = snap.data().members || [];
+        members = members.map(m => {
+          if (m.uid === currentUser.uid) m.totalScore = calculateAccumulatedScore();
+          return m;
+        });
+        await updateDoc(docRef, { members: members });
+      }
+    }
 
-    function render() {
-      const list = document.getElementById('habits-list');
-      list.innerHTML = '';
-      habits.forEach(h => {
-        const target = MILESTONES.find(m => m > h.streak) || 1000;
-        const progress = Math.min((h.streak / target) * 100, 100);
-        
+    function calculateAccumulatedScore() {
+      return habits.reduce((acc, h) => acc + (h.history ? h.history.length : 0), 0);
+    }
+
+    // Core Input Creation Mechanics
+    habitForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = habitInput.value.trim();
+      const newHabit = {
+        id: Date.now(), name: text, streak: 0, lastCompleted: null, history: [],
+        showCalendar: false, showAnalytics: false,
+        viewMonth: currentMonthGlobal, viewYear: currentYearGlobal
+      };
+      habits.push(newHabit);
+      habitInput.value = '';
+      await saveHabitsToCloud();
+      renderHabits();
+    });
+
+    // Milestone Math Pipeline Core
+    function getMilestoneMetrics(streak) {
+      let currentTarget = MILESTONE_TIERS[0];
+      for (let i = 0; i < MILESTONE_TIERS.length; i++) {
+        if (streak < MILESTONE_TIERS[i]) {
+          currentTarget = MILESTONE_TIERS[i];
+          break;
+        } else if (streak >= MILESTONE_TIERS[MILESTONE_TIERS.length - 1]) {
+          currentTarget = MILESTONE_TIERS[MILESTONE_TIERS.length - 1];
+          break;
+        }
+      }
+      const fillingPercent = Math.min((streak / currentTarget) * 100, 100);
+      return { target: currentTarget, percentage: fillingPercent };
+    }
+
+    function renderHabits() {
+      habitsList.innerHTML = '';
+      const today = new Date().setHours(0,0,0,0);
+      const oneDayInMs = 24 * 60 * 60 * 1000;
+
+      habits.forEach(habit => {
+        let statusMessage = "Keep up the work! 🌱";
+        if (habit.lastCompleted) {
+          const daysPassed = Math.floor((today - new Date(habit.lastCompleted).setHours(0,0,0,0)) / oneDayInMs);
+          if (daysPassed === 1) statusMessage = "⚠️ You missed yesterday! Check it off today to lock in your streak.";
+          else if (daysPassed > 1) { habit.streak = 0; statusMessage = "Streak reset. Start fresh today!"; }
+          else if (daysPassed === 0) statusMessage = "✅ Logged for today!";
+        }
+
+        const isDoneToday = habit.lastCompleted && new Date(habit.lastCompleted).setHours(0,0,0,0) === today;
+        const completeBtnClass = isDoneToday ? "btn-complete checked" : "btn-complete";
+
+        const metrics = getMilestoneMetrics(habit.streak);
+
         const card = document.createElement('div');
-        card.className = 'habit-card';
+        card.classList.add('habit-card');
         card.innerHTML = `
-          <div><strong>${h.name}</strong> - Streak: ${h.streak}</div>
-          <div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div>
-          <div class="calendar-navbar">
-            <button onclick="changeMonth(${h.id}, -1)">◀</button>
-            <span>${h.viewMonth + 1}/${h.viewYear}</span>
-            <button onclick="changeMonth(${h.id}, 1)">▶</button>
+          <div class="habit-header">
+            <span class="habit-title">${habit.name}</span>
+            <span class="streak-badge">🔥 ${habit.streak}</span>
           </div>
+          
+          <div class="milestone-container">
+            <div class="milestone-meta">
+              <span>📊 ${habit.streak} Completed</span>
+              <span style="color: #ff9800;">Target: ${metrics.target} Days</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" style="width: ${metrics.percentage}%;"></div>
+            </div>
+          </div>
+
+          <p class="motivation-msg">${statusMessage}</p>
+          <div class="habit-actions">
+            <button class="${completeBtnClass}" id="comp-${habit.id}">${isDoneToday ? "✓ Done" : "Complete"}</button>
+            <button class="btn-analytics" id="anl-${habit.id}">📊 Chart</button>
+            <button class="btn-calendar" id="cal-${habit.id}">📅 Calendar</button>
+            <button class="btn-delete" id="del-${habit.id}">Delete</button>
+          </div>
+          <div id="anl-box-${habit.id}"></div>
+          <div id="cal-box-${habit.id}"></div>
         `;
-        list.appendChild(card);
+        habitsList.appendChild(card);
+
+        document.getElementById(`comp-${habit.id}`).addEventListener('click', () => toggleCompleteHabit(habit.id));
+        document.getElementById(`anl-${habit.id}`).addEventListener('click', () => toggleAnalytics(habit.id));
+        document.getElementById(`cal-${habit.id}`).addEventListener('click', () => toggleCalendar(habit.id));
+        document.getElementById(`del-${habit.id}`).addEventListener('click', () => deleteHabit(habit.id));
+
+        if (habit.showAnalytics) renderAnalyticsPanel(habit);
+        if (habit.showCalendar) renderCalendarPanel(habit);
       });
     }
+
+    async function toggleCompleteHabit(id) {
+      const habit = habits.find(h => h.id === id); if (!habit) return;
+      const todayObj = new Date();
+      const formattedToday = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
+      const todayTimestamp = todayObj.setHours(0,0,0,0);
+      const doneToday = habit.lastCompleted && new Date(habit.lastCompleted).setHours(0,0,0,0) === todayTimestamp;
+
+      if (doneToday) {
+        if (habit.streak > 0) habit.streak -= 1;
+        habit.history = habit.history.filter(d => d !== formattedToday);
+        habit.lastCompleted = habit.history.length > 0 ? new Date(habit.history.sort().reverse()[0]).getTime() : null;
+      } else {
+        habit.streak += 1; habit.lastCompleted = Date.now();
+        if (!habit.history.includes(formattedToday)) habit.history.push(formattedToday);
+
+        if (MILESTONE_TIERS.includes(habit.streak)) {
+          triggerMilestoneCelebration(habit.name, habit.streak);
+        }
+      }
+      await saveHabitsToCloud(); renderHabits();
+    }
+
+    function triggerMilestoneCelebration(habitName, milestoneVal) {
+      milestoneText.innerHTML = `Incredible focus! You have officially tracked <strong>"${habitName}"</strong> for <strong>${milestoneVal} days straight</strong>! Your dedication is paying off.`;
+      milestoneModal.classList.remove('hidden');
+    }
+
+    function toggleAnalytics(id) {
+      const habit = habits.find(h => h.id === id);
+      if (habit) { habit.showAnalytics = !habit.showAnalytics; renderHabits(); }
+    }
+
+    function renderAnalyticsPanel(habit) {
+      const totalCompletions = habit.history ? habit.history.length : 0;
+      const currentMonthDaysCount = new Date(currentYearGlobal, currentMonthGlobal + 1, 0).getDate();
+      const occurrencesThisMonth = habit.history.filter(d => d.startsWith(`${currentYearGlobal}-${String(currentMonthGlobal+1).padStart(2,'0')}`)).length;
+      const winRatePercent = Math.round((occurrencesThisMonth / currentMonthDaysCount) * 100) || 0;
+
+      const panel = document.getElementById(`anl-box-${habit.id}`);
+      panel.innerHTML = `
+        <div class="analytics-panel">
+          <strong style="font-size:0.9rem; color:white;">📊 Performance Breakdown</strong>
+          <div class="analytics-grid">
+            <div class="metric-box">
+              <div class="metric-val">${totalCompletions}</div>
+              <div class="metric-lbl">Total Logged</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-val">${winRatePercent}%</div>
+              <div class="metric-lbl">Month Rate</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-val">🔥 ${habit.streak}</div>
+              <div class="metric-lbl">Current Streak</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function toggleCalendar(id) {
+      const habit = habits.find(h => h.id === id);
+      if (habit) { habit.showCalendar = !habit.showCalendar; renderHabits(); }
+    }
+
+    function renderCalendarPanel(habit) {
+      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      const totalDays = new Date(habit.viewYear, habit.viewMonth + 1, 0).getDate();
+      const firstDay = new Date(habit.viewYear, habit.viewMonth, 1).getDay();
+      
+      const panel = document.getElementById(`cal-box-${habit.id}`);
+      panel.innerHTML = `
+        <div class="calendar-view">
+          <div class="calendar-navbar">
+            <button class="calendar-nav-btn" id="prev-btn-${habit.id}">◀</button>
+            <span style="font-weight:bold; color:white;">${monthNames[habit.viewMonth]} ${habit.viewYear}</span>
+            <button class="calendar-nav-btn" id="next-btn-${habit.id}">▶</button>
+          </div>
+          <div class="calendar-grid" id="grid-${habit.id}"></div>
+        </div>
+      `;
+
+      const grid = document.getElementById(`grid-${habit.id}`);
+      ['S','M','T','W','T','F','S'].forEach(day => {
+        const lbl = document.createElement('div');
+        lbl.className = 'calendar-day-label';
+        lbl.innerText = day;
+        grid.appendChild(lbl);
+      });
+
+      for(let i=0; i<firstDay; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'calendar-cell empty';
+        grid.appendChild(emptyCell);
+      }
+
+      for(let d=1; d<=totalDays; d++) {
+        const dStr = `${habit.viewYear}-${String(habit.viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const cell = document.createElement('div');
+        cell.className = `calendar-cell ${habit.history.includes(dStr) ? 'completed' : ''}`;
+        cell.innerText = d;
+        grid.appendChild(cell);
+      }
+
+      document.getElementById(`prev-btn-${habit.id}`).addEventListener('click', () => changeMonth(habit.id, -1));
+      document.getElementById(`next-btn-${habit.id}`).addEventListener('click', () => changeMonth(habit.id, 1));
+    }
+
+    function changeMonth(habitId, delta) {
+      const habit = habits.find(h => h.id === habitId);
+      if (!habit) return;
+      habit.viewMonth += delta;
+      if (habit.viewMonth > 11) { habit.viewMonth = 0; habit.viewYear++; }
+      else if (habit.viewMonth < 0) { habit.viewMonth = 11; habit.viewYear--; }
+      renderHabits();
+    }
+
+    function renderGroupDashboard() {
+      if (!groupData) return;
+      const sortedMembers = [...groupData.members].sort((a,b) => b.totalScore - a.totalScore);
+
+      let rowsHtml = '';
+      sortedMembers.forEach((member, idx) => {
+        const medal = idx === 0 ? "🥇 " : idx === 1 ? "🥈 " : idx === 2 ? "🥉 " : "";
+        const cleanName = member.email === currentUser.email ? "You" : member.email.split('@')[0];
+        rowsHtml += `
+          <div class="leaderboard-row">
+            <span class="leaderboard-user">${medal}${cleanName}</span>
+            <span class="leaderboard-score">✨ ${member.totalScore} check-ins</span>
+          </div>
+        `;
+      });
+
+      activeSquadZone.innerHTML = `
+        <div class="group-card">
+          <h2 style="margin-top:0; margin-bottom:5px; color:white;">${groupData.name}</h2>
+          <span class="group-id-tag">Squad Code: ${groupData.squadId}</span>
+          <p style="font-size:0.85rem; color:#8495a5; margin:0;">Share this Code with your friends so they can join this live leaderboard room!</p>
+          <div class="leaderboard-list">
+            <h4 style="margin-bottom:10px; color:#ff9800; border-bottom:1px solid #28333e; padding-bottom:5px;">Leaderboard Standing</h4>
+            ${rowsHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    async function deleteHabit(id) {
+      if(confirm("Delete habit?")) { habits = habits.filter(h => h.id !== id); await saveHabitsToCloud(); renderHabits(); }
+    }
+
+    window.closeModal = function() { milestoneModal.classList.add('hidden'); }
   </script>
 </body>
 </html>
