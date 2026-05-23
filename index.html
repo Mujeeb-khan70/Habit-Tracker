@@ -443,18 +443,21 @@
       }
     });
 
-    // Cloud DB Synchronizers
+    // OPTIMIZED BACKGROUND DATABASE SYNCHRONIZERS (NO AWAIT BLOCKING)
     async function saveHabitsToCloud() {
       if (!currentUser) return;
-      await setDoc(doc(db, "users_habits", currentUser.uid), { habits: habits, email: currentUser.email });
-      await syncUpdateGroupMetrics();
+      try {
+        await setDoc(doc(db, "users_habits", currentUser.uid), { habits: habits, email: currentUser.email });
+        await syncUpdateGroupMetrics();
+      } catch (error) {
+        console.error("Background sync failed:", error);
+      }
     }
 
     async function syncLoadHabitsFromCloud() {
       if (!currentUser) return;
       const snap = await getDoc(doc(db, "users_habits", currentUser.uid));
       habits = snap.exists() ? (snap.data().habits || []) : [];
-      // Ensure time properties exist on load
       habits.forEach(h => {
         if (h.viewMonth === undefined) h.viewMonth = currentMonthGlobal;
         if (h.viewYear === undefined) h.viewYear = currentYearGlobal;
@@ -502,19 +505,15 @@
 
     async function syncLoadGroupFromCloud() {
       if (!currentUser) return;
-      const cachedId = localStorage.setItem ? localStorage.getItem(`squad_cache_${currentUser.uid}`) : null;
-      
+      const cachedId = localStorage.getItem(`squad_cache_${currentUser.uid}`);
       if (!cachedId) {
         activeSquadZone.innerHTML = `<p style="color:#6c7a86; text-align:center;">You aren't in any social squads yet. Create one or join your friend's room above!</p>`;
         return;
       }
-
       const querySampleSnap = await getDoc(doc(db, "groups", cachedId));
       if (querySampleSnap.exists()) {
         groupData = querySampleSnap.data();
         renderGroupDashboard();
-      } else {
-        activeSquadZone.innerHTML = `<p style="color:#6c7a86; text-align:center;">You aren't in any social squads yet. Create one or join your friend's room above!</p>`;
       }
     }
 
@@ -538,7 +537,6 @@
       return habits.reduce((acc, h) => acc + (h.history ? h.history.length : 0), 0);
     }
 
-    // Core Input Creation Mechanics
     habitForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const text = habitInput.value.trim();
@@ -549,11 +547,10 @@
       };
       habits.push(newHabit);
       habitInput.value = '';
-      await saveHabitsToCloud();
-      renderHabits();
+      renderHabits(); // Render immediately
+      saveHabitsToCloud(); // Save in background
     });
 
-    // Milestone Math Pipeline Core
     function getMilestoneMetrics(streak) {
       let currentTarget = MILESTONE_TIERS[0];
       for (let i = 0; i < MILESTONE_TIERS.length; i++) {
@@ -585,7 +582,6 @@
 
         const isDoneToday = habit.lastCompleted && new Date(habit.lastCompleted).setHours(0,0,0,0) === today;
         const completeBtnClass = isDoneToday ? "btn-complete checked" : "btn-complete";
-
         const metrics = getMilestoneMetrics(habit.streak);
 
         const card = document.createElement('div');
@@ -628,7 +624,8 @@
       });
     }
 
-    async function toggleCompleteHabit(id) {
+    // INTERACTION MECHANIC OPTIMIZATION (Instant feedback loop)
+    function toggleCompleteHabit(id) {
       const habit = habits.find(h => h.id === id); if (!habit) return;
       const todayObj = new Date();
       const formattedToday = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
@@ -647,7 +644,9 @@
           triggerMilestoneCelebration(habit.name, habit.streak);
         }
       }
-      await saveHabitsToCloud(); renderHabits();
+      
+      renderHabits();       // 1. Instantly redraw the window screen (0ms delay)
+      saveHabitsToCloud();  // 2. Fire database request silently into background context
     }
 
     function triggerMilestoneCelebration(habitName, milestoneVal) {
@@ -710,7 +709,7 @@
         </div>
       `;
 
-      const grid = document.getElementById(`grid-${habit.id}`);
+      const grid = document.getElementById('grid-' + habit.id);
       ['S','M','T','W','T','F','S'].forEach(day => {
         const lbl = document.createElement('div');
         lbl.className = 'calendar-day-label';
@@ -775,7 +774,11 @@
     }
 
     async function deleteHabit(id) {
-      if(confirm("Delete habit?")) { habits = habits.filter(h => h.id !== id); await saveHabitsToCloud(); renderHabits(); }
+      if(confirm("Delete habit?")) { 
+        habits = habits.filter(h => h.id !== id); 
+        renderHabits();
+        saveHabitsToCloud(); 
+      }
     }
 
     window.closeModal = function() { milestoneModal.classList.add('hidden'); }
