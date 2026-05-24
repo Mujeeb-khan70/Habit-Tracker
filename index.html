@@ -501,7 +501,7 @@
     const db = getFirestore(app);
 
     // Dom Binding Registry
-				
+	
     const authView = document.getElementById('auth-view');
     const dashboardView = document.getElementById('dashboard-view');
     const authTitle = document.getElementById('auth-title');
@@ -887,13 +887,17 @@
           const userProfileSnap = await getDoc(userProfileRef);
           
 		if (userProfileSnap.exists()) {
-            const emailPrefix = user.email ? user.email.split('@')[0] : "user";
+            const emailPrefix = user?.email ? user.email.split('@')[0] : "user";
             myUsername = userProfileSnap.data().username || emailPrefix || "user";
             myFriendsList = userProfileSnap.data().friends || [];
         } else {
-            const emailPrefix = user.email ? user.email.split('@')[0] : "user";
+            const emailPrefix = user?.email ? user.email.split('@')[0] : "user";
             myUsername = emailPrefix || "user";
             myFriendsList = [];
+        }
+
+        userDisplayHandle.innerText = `@${myUsername}`;
+        dropdownUsernameTxt.innerText = `@${myUsername}`;
         }
 
         userDisplayHandle.innerText = `@${myUsername}`;
