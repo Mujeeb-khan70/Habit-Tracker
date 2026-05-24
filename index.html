@@ -224,7 +224,8 @@
     .modal-content { background-color: #1a2229; padding: 35px; border-radius: 28px; text-align: center; border: 3px solid #ff9600; max-width: 340px; }
     .modal-close-btn { background-color: #58cc02; color: white; border: none; padding: 12px 35px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 15px; }
     .hidden { display: none !important; }
-/* Achievement Tab Layout Elements */
+
+    /* Achievement Tab Layout Elements */
     .achievement-rank-card {
       background: linear-gradient(135deg, #1a2229 0%, #232a31 100%);
       border: 2px solid #ff9800;
@@ -347,7 +348,7 @@
             <span class="user-handle-text" id="user-display-handle">@username</span>
             <button class="copy-btn" id="copy-username-btn">Copy 📋</button>
           </div>
-          <span class="user-level-badge" id="user-display-level">Level 1 (4 XP)</span>
+          <span class="user-level-badge" id="user-display-level">Level 1 (0 XP)</span>
         </div>
       </div>
       
@@ -402,7 +403,8 @@
         <button id="tab-achievements" class="tab-btn" style="font-size: 1.05rem; padding: 12px 6px;">🏆 Trophies</button>
         <button id="tab-friends" class="tab-btn" style="max-width: 60px; padding: 12px 0; font-size: 1.2rem;">👥</button>
       </div>
-<div id="panel-achievements" class="hidden">
+
+      <div id="panel-achievements" class="hidden">
         <div class="achievement-rank-card">
           <div class="rank-badge-glowing" id="achieve-rank-title">Spark Initiate</div>
           <div style="font-size: 0.9rem; color: #a4b3c1; font-weight: 600;" id="achieve-total-xp">0 XP Accumulated</div>
@@ -418,9 +420,9 @@
         </div>
 
         <div class="achievement-section-title">🏅 Streak Milestone Trophies</div>
-        <div class="badges-grid-layout" id="achieve-badges-grid">
-          </div>
+        <div class="badges-grid-layout" id="achieve-badges-grid"></div>
       </div>
+
       <div id="panel-habits">
         <div class="action-panel-card">
           <form id="habit-form" class="flex-form">
@@ -530,7 +532,7 @@
     const logoutActionBtn = document.getElementById('logout-action-btn');
 
     const tabHabits = document.getElementById('tab-habits');
-    const tabAchievements = document.getElementById('tab-tab-achievements') ? document.getElementById('tab-tab-achievements') : document.getElementById('tab-achievements');
+    const tabAchievements = document.getElementById('tab-achievements');
     const tabFriends = document.getElementById('tab-friends');
     const panelHabits = document.getElementById('panel-habits');
     const panelAchievements = document.getElementById('panel-achievements');
@@ -597,8 +599,7 @@
       }
     });
 
-    // Tab Navigation Configuration
-  // 3-Way Tab Navigation Router Configuration
+    // 3-Way Tab Navigation Router Configuration
     tabHabits.addEventListener('click', () => {
       tabHabits.classList.add('active'); tabAchievements.classList.remove('active'); tabFriends.classList.remove('active');
       panelHabits.classList.remove('hidden'); panelAchievements.classList.add('hidden'); panelSocial.classList.add('hidden');
@@ -614,7 +615,6 @@
       tabFriends.classList.add('active'); tabHabits.classList.remove('active'); tabAchievements.classList.remove('active');
       panelSocial.classList.remove('hidden'); panelHabits.classList.add('hidden'); panelAchievements.classList.add('hidden');
       loadFriendsListUI();
-    });
     });
 
     avatarToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); avatarDropdownBox.classList.toggle('hidden'); });
@@ -693,116 +693,12 @@
       authForgotPswTrigger.classList.add('hidden');
     });
 
-    // Master Authentication Engine Integration
-    authSubmitBtn.addEventListener('click', async () => {
-      const email = authEmail.value.trim(); 
-      const password = authPassword.value;
-      const confirmPassword = authConfirmPassword.value;
-      const username = authUsername.value.trim().toLowerCase().replace('@', '');
-      
-      if (emailError) emailError.innerText = "";
-      if (passwordError) passwordError.innerText = "";
-      
-      if (!email || !password) { 
-        if (!email && emailError) emailError.innerText = "Please enter your email.";
-        if (!password && passwordError) passwordError.innerText = "Please enter your password.";
-        return; 
-      }
-      if (!isLoginMode) {
-        if(!username) { alert("Please pick a unique username."); return; }
-        if(password !== confirmPassword) { 
-          if (passwordError) passwordError.innerText = "Passwords do not match."; 
-          return; 
-        }
-      }
-
-      try {
-        if (isLoginMode) {
-          await signInWithEmailAndPassword(auth, email, password);
-        } else {
-          const nameCheck = await getDoc(doc(db, "usernames", username));
-          if(nameCheck.exists()) { alert("Username already taken!"); return; }
-
-          if(auth.currentUser && auth.currentUser.isAnonymous) {
-            await linkWithCredential(auth.currentUser, EmailAuthProvider.credential(email, password));
-            myUsername = username;
-            await setDoc(doc(db, "usernames", username), { uid: auth.currentUser.uid });
-            await saveHabitsToCloud();
-            alert("🎉 Your guest profile and habits have been linked successfully!");
-          } else {
-            myUsername = username;
-            const credential = await createUserWithEmailAndPassword(auth, email, password);
-            await setDoc(doc(db, "usernames", username), { uid: credential.user.uid });
-            await setDoc(doc(db, "users_habits", credential.user.uid), { habits: [], email: email, username: username, friends: [] });
-          }
-        }
-      } catch (e) { 
-        if (e.code === 'auth/email-already-in-use') {
-          if (emailError) emailError.innerText = "This email is already registered.";
-        } else if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
-          if (passwordError) passwordError.innerText = "Incorrect email or password.";
-        } else if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-email') {
-          if (emailError) emailError.innerText = "No account found with this email.";
-        } else if (e.code === 'auth/weak-password') {
-          if (passwordError) passwordError.innerText = "Password must be at least 6 characters.";
-        } else {
-          alert("Error: " + e.message); 
-        }
-      }
-    });
-
-    logoutActionBtn.addEventListener('click', () => signOut(auth));
-
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        currentUser = user;
-        authView.classList.add('hidden'); 
-        dashboardView.classList.remove('hidden');
-        
-        if(user.isAnonymous) {
-          dropdownUserEmail.innerText = "Guest Session Mode";
-          myUsername = "guest";
-          userDisplayHandle.innerText = "👤 Anonymous Guest";
-          dropdownUsernameTxt.innerText = "Guest Profile";
-          avatarToggleBtn.innerText = "G";
-          copyUsernameBtn.classList.add('hidden');
-          dropdownUpgradeAccountBtn.classList.remove('hidden');
-          headerUserBadge.classList.remove('hidden');
-          renderHabits();
-        } else {
-          dropdownUserEmail.innerText = user.email;
-          copyUsernameBtn.classList.remove('hidden');
-          dropdownUpgradeAccountBtn.classList.add('hidden');
-          await syncLoadHabitsFromCloud();
-        }
-      } else {
-        currentUser = null; habits = []; myFriendsList = []; myUsername = "";
-        avatarToggleBtn.innerText = "?";
-        headerUserBadge.classList.add('hidden');
-        dashboardView.classList.add('hidden'); 
-        authView.classList.remove('hidden');
-      }
-    });
-
-    // Cloud Database Persistence Handlers
-    async function saveHabitsToCloud() {
-      if (!currentUser) return;
-      try {
-        await setDoc(doc(db, "users_habits", currentUser.uid), { 
-          habits: habits, email: currentUser.email || "guest", username: myUsername, friends: myFriendsList 
-        });
-        updateUserLevelDisplay();
-      } catch (error) { console.error("Database sync failed:", error); }
-    }
-
+    // XP Systems Engine Logic
     function calculateTrueXP() {
       let totalXp = 0;
       habits.forEach(h => {
         if (h.history) {
-          // 1. Each completed check-in = 10 XP
           totalXp += h.history.length * 10;
-          
-          // 2. Add Milestone Bounties (+100 XP per milestone unlocked)
           MILESTONE_TIERS.forEach(tier => {
             if (h.streak >= tier) {
               totalXp += 100;
@@ -828,10 +724,8 @@
       const totalXp = calculateTrueXP();
       const currentLevelObj = getCurrentLevelData(totalXp);
       
-      // Update Navbar text
       userDisplayLevel.innerText = `Level ${currentLevelObj.level} (${totalXp} XP)`;
       
-      // If the achievements view elements exist on page, refresh them too
       const achRankTitle = document.getElementById('achieve-rank-title');
       if(achRankTitle) {
         achRankTitle.innerText = `${currentLevelObj.title} (Level ${currentLevelObj.level})`;
@@ -853,355 +747,9 @@
       }
     }
 
-    async function syncLoadHabitsFromCloud() {
-      if (!currentUser) return;
-      const snap = await getDoc(doc(db, "users_habits", currentUser.uid));
-      if (snap.exists()) {
-        const data = snap.data();
-        habits = data.habits || [];
-        myFriendsList = data.friends || [];
-        myUsername = data.username || "user";
-        
-        userDisplayHandle.innerText = `@${myUsername}`;
-        dropdownUsernameTxt.innerText = `@${myUsername}`;
-        avatarToggleBtn.innerText = myUsername.charAt(0).toUpperCase();
-        headerUserBadge.classList.remove('hidden');
-        
-        habits.forEach(h => {
-          if (h.viewMonth === undefined) h.viewMonth = new Date().getMonth();
-          if (h.viewYear === undefined) h.viewYear = new Date().getFullYear();
-          if (h.emoji === undefined) h.emoji = "🎯";
-          if (h.isPrivate === undefined) h.isPrivate = false;
-          if (h.isArchived === undefined) h.isArchived = false;
-          if (h.showEditor === undefined) h.showEditor = false;
-          h.showAnalytics = false;
-        });
-
-        updateUserLevelDisplay();
-        renderHabits();
-      }
-    }
-
-    // Dynamic Tracking Form Listener Engine
-    habitForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const text = habitInput.value.trim();
-      const selectedEmoji = habitEmojiSelect.value;
-      const makePrivate = habitPrivacyCheck.checked;
-
-      const newHabit = {
-        id: Date.now(),
-        name: text,
-        emoji: selectedEmoji,
-        streak: 0,
-        lastCompleted: null,
-        history: [],
-        isPrivate: makePrivate,
-        isArchived: false,
-        showEditor: false,
-        viewMonth: new Date().getMonth(),
-        viewYear: new Date().getFullYear()
-      };
-
-      habits.push(newHabit);
-      habitInput.value = '';
-      habitPrivacyCheck.checked = false;
-      saveHabitsToCloud();
-      renderHabits();
-    });
-
-    // Deep Render Interface for Main Control Elements
-    function renderHabits() {
-      if (!habitsList) return;
-      habitsList.innerHTML = '';
-      
-      const today = new Date().setHours(0,0,0,0);
-      const oneDayInMs = 24 * 60 * 60 * 1000;
-
-      habits.forEach(habit => {
-        if(habit.isArchived && !showArchivedMode) return;
-
-        let statusMessage = "Keep the flame burning! 🔥";
-        let isDanger = false;
-
-        if (habit.lastCompleted) {
-          const lastDate = new Date(habit.lastCompleted).setHours(0,0,0,0);
-          const daysPassed = Math.floor((today - lastDate) / oneDayInMs);
-
-          if (daysPassed === 1) {
-            statusMessage = "⚠️ You missed yesterday! Protect your streak!";
-            isDanger = true;
-          } else if (daysPassed > 1) {
-            habit.streak = 0;
-            statusMessage = "Streak reset to 0. Fresh start today! 🌱";
-          } else if (daysPassed === 0) {
-            statusMessage = "✅ Completed for today! See you tomorrow!";
-          }
-        }
-
-        const nextMilestone = MILESTONE_TIERS.find(m => m > habit.streak) || 365;
-        const previousMilestone = [...MILESTONE_TIERS].reverse().find(m => m <= habit.streak) || 0;
-        const progressPercent = Math.min(100, Math.max(0, ((habit.streak - previousMilestone) / (nextMilestone - previousMilestone)) * 100));
-
-        const card = document.createElement('div');
-        card.className = `habit-card ${habit.isArchived ? 'archived-state' : ''} ${isDanger ? 'danger' : ''}`;
-
-        const isDoneToday = habit.lastCompleted && new Date(habit.lastCompleted).setHours(0,0,0,0) === today;
-
-        card.innerHTML = `
-          <div class="habit-header">
-            <span class="habit-title">${habit.emoji || '🎯'} ${habit.name}</span>
-            <div class="status-badge-cluster">
-              ${habit.isPrivate ? '<span class="privacy-mini-icon">🔒</span>' : ''}
-              <span class="streak-badge">🔥 ${habit.streak}</span>
-            </div>
-          </div>
-          <p class="motivation-msg">${statusMessage}</p>
-          
-          <div class="milestone-container">
-            <div class="milestone-meta">
-              <span>Milestone progress</span>
-              <span>${habit.streak}/${nextMilestone} Days</span>
-            </div>
-            <div class="progress-track">
-              <div class="progress-fill" style="width: ${progressPercent}%"></div>
-            </div>
-          </div>
-
-          <div class="habit-actions">
-            <button class="btn-complete ${isDoneToday ? 'checked' : ''}" data-id="${habit.id}" ${isDoneToday ? 'disabled' : ''}>
-              ${isDoneToday ? 'Done' : 'Complete'}
-            </button>
-            <button class="btn-edit" data-id="${habit.id}">Edit Options</button>
-            <button class="btn-calendar" data-id="${habit.id}">Calendar</button>
-          </div>
-
-          <div class="edit-panel hidden" id="editor-${habit.id}">
-            <div class="input-row">
-              <input type="text" id="edit-name-${habit.id}" value="${habit.name}">
-            </div>
-            <div class="edit-panel-actions-row">
-              <button class="btn-inline-save" data-id="${habit.id}">Save Changes</button>
-              <div class="edit-panel-danger-zone">
-                <button class="btn-inline-archive" data-id="${habit.id}">${habit.isArchived ? 'Unarchive' : 'Archive'}</button>
-                <button class="btn-inline-delete" data-id="${habit.id}">Delete</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="calendar-view hidden" id="calendar-${habit.id}">
-            <div class="calendar-navbar">
-              <button class="calendar-nav-btn prev-month" data-id="${habit.id}">◀</button>
-              <span style="font-weight:bold; color:white;" id="cal-month-lbl-${habit.id}"></span>
-              <button class="calendar-nav-btn next-month" data-id="${habit.id}">▶</button>
-            </div>
-            <div class="calendar-grid" id="cal-grid-${habit.id}"></div>
-          </div>
-        `;
-        habitsList.appendChild(card);
-        if(habit.showEditor) document.getElementById(`editor-${habit.id}`).classList.remove('hidden');
-        if(habit.showAnalytics) renderCalendarMatrix(habit);
-      });
-    }
-
-    // Dynamic Element Click Management Router
-    document.addEventListener('click', (e) => {
-      const target = e.target;
-      const id = parseInt(target.getAttribute('data-id'));
-      if(!id) return;
-
-      const habit = habits.find(h => h.id === id);
-      if(!habit) return;
-
-      if(target.classList.contains('btn-complete')) {
-        habit.streak += 1;
-        const now = Date.now();
-        habit.lastCompleted = now;
-        if(!habit.history) habit.history = [];
-        habit.history.push(now);
-
-        if (MILESTONE_TIERS.includes(habit.streak)) {
-          milestoneText.innerText = `Your dedication to "${habit.name}" has reached a massive milestone of ${habit.streak} days in a row!`;
-          milestoneModal.classList.remove('hidden');
-        }
-        saveHabitsToCloud();
-        renderHabits();
-      }
-      
-      else if(target.classList.contains('btn-edit')) {
-        habit.showEditor = !habit.showEditor;
-        document.getElementById(`editor-${habit.id}`).classList.toggle('hidden', !habit.showEditor);
-      }
-
-      else if(target.classList.contains('btn-inline-save')) {
-        const updatedName = document.getElementById(`edit-name-${habit.id}`).value.trim();
-        if(updatedName) {
-          habit.name = updatedName;
-          habit.showEditor = false;
-          saveHabitsToCloud();
-          renderHabits();
-        }
-      }
-
-      else if(target.classList.contains('btn-inline-archive')) {
-        habit.isArchived = !habit.isArchived;
-        habit.showEditor = false;
-        saveHabitsToCloud();
-        renderHabits();
-      }
-
-      else if(target.classList.contains('btn-inline-delete')) {
-        if(confirm("Are you sure you want to delete this habit permanently?")) {
-          habits = habits.filter(h => h.id !== id);
-          saveHabitsToCloud();
-          renderHabits();
-        }
-      }
-
-      else if(target.classList.contains('btn-calendar')) {
-        habit.showAnalytics = !habit.showAnalytics;
-        document.getElementById(`calendar-${habit.id}`).classList.toggle('hidden', !habit.showAnalytics);
-        if(habit.showAnalytics) renderCalendarMatrix(habit);
-      }
-
-      else if(target.classList.contains('prev-month')) {
-        habit.viewMonth--;
-        if(habit.viewMonth < 0) { habit.viewMonth = 11; habit.viewYear--; }
-        renderCalendarMatrix(habit);
-      }
-
-      else if(target.classList.contains('next-month')) {
-        habit.viewMonth++;
-        if(habit.viewMonth > 11) { habit.viewMonth = 0; habit.viewYear++; }
-        renderCalendarMatrix(habit);
-      }
-    });
-
-    // Monthly Completion Array Calculator Layout
-    function renderCalendarMatrix(habit) {
-      const monthLabel = document.getElementById(`cal-month-lbl-${habit.id}`);
-      const gridContainer = document.getElementById(`cal-grid-${habit.id}`);
-      if(!monthLabel || !gridContainer) return;
-
-      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-      monthLabel.innerText = `${monthNames[habit.viewMonth]} ${habit.viewYear}`;
-      gridContainer.innerHTML = '';
-
-      const dayLabels = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-      dayLabels.forEach(d => {
-        const lbl = document.createElement('div');
-        lbl.className = 'calendar-day-label';
-        lbl.innerText = d;
-        gridContainer.appendChild(lbl);
-      });
-
-      const firstDayIdx = new Date(habit.viewYear, habit.viewMonth, 1).getDay();
-      const totalDays = new Date(habit.viewYear, habit.viewMonth + 1, 0).getDate();
-
-      for (let i = 0; i < firstDayIdx; i++) {
-        const emptyCell = document.createElement('div');
-        emptyCell.className = 'calendar-cell empty';
-        gridContainer.appendChild(emptyCell);
-      }
-
-      for (let day = 1; day <= totalDays; day++) {
-        const cell = document.createElement('div');
-        cell.className = 'calendar-cell';
-        cell.innerText = day;
-
-        const cellDateStr = new Date(habit.viewYear, habit.viewMonth, day).setHours(0,0,0,0);
-        const logicHistory = habit.history || [];
-        const checkedMatch = logicHistory.some(timestamp => new Date(timestamp).setHours(0,0,0,0) === cellDateStr);
-
-        if(checkedMatch) cell.classList.add('completed');
-        gridContainer.appendChild(cell);
-      }
-    }
-
-    // Social Network Graph Interface Engine
-    friendSearchBtn.addEventListener('click', async () => {
-      if (currentUser.isAnonymous) { alert("Social networking profiles require account registration."); return; }
-      const targetQuery = friendSearchInput.value.trim().toLowerCase().replace('@', '');
-      searchResultsZone.innerHTML = `<p style='color:#6c7a86;'>Searching platform databases...</p>`;
-      if(targetQuery === myUsername) { searchResultsZone.innerHTML = `<p style='color:#ea4335;'>You cannot add yourself!</p>`; return; }
-
-      const nameDoc = await getDoc(doc(db, "usernames", targetQuery));
-      if(nameDoc.exists()) {
-        const targetUid = nameDoc.data().uid;
-        searchResultsZone.innerHTML = `
-          <div class="search-result-box">
-            <span style="font-weight:bold; color:white;">✨ @${targetQuery} Found!</span>
-            <button class="submit-action-btn" id="add-friend-exec-btn" style="padding: 6px 14px; height:auto;">Add +</button>
-          </div>
-        `;
-        document.getElementById('add-friend-exec-btn').addEventListener('click', async () => {
-          if(!myFriendsList.includes(targetUid)) {
-            myFriendsList.push(targetUid);
-            await saveHabitsToCloud();
-            const friendSnap = await getDoc(doc(db, "users_habits", targetUid));
-            if(friendSnap.exists()) {
-              const theirFriendsList = friendSnap.data().friends || [];
-              if(!theirFriendsList.includes(currentUser.uid)) {
-                theirFriendsList.push(currentUser.uid);
-                await updateDoc(doc(db, "users_habits", targetUid), { friends: theirFriendsList });
-              }
-            }
-            alert(`Added @${targetQuery} to your network connection list successfully!`);
-            friendSearchInput.value = '';
-            searchResultsZone.innerHTML = '';
-            loadFriendsListUI();
-          } else { alert("User profile link is already connected!"); }
-        });
-      } else { searchResultsZone.innerHTML = `<p style='color:#ea4335;'>No exact user handle profiles discovered.</p>`; }
-    });
-
-    async function loadFriendsListUI() {
-      if(!friendsListZone) return;
-      friendsListZone.innerHTML = `<p style="color:#6c7a86; margin-left:5px;">Querying active directory scores...</p>`;
-      if(myFriendsList.length === 0) { friendsListZone.innerHTML = `<p style="color:#6c7a86; margin-left:5px;">Your network list is currently empty. Connect with users above!</p>`; return; }
-
-      let mergedOutputHtml = "";
-      for(const friendUid of myFriendsList) {
-        const snap = await getDoc(doc(db, "users_habits", friendUid));
-        if(snap.exists()) {
-          const data = snap.data();
-          const fName = data.username || "User";
-          const fHabits = data.habits || [];
-          const score = fHabits.reduce((acc, h) => acc + (h.history ? h.history.length : 0), 0);
-          mergedOutputHtml += `
-            <div class="friend-row">
-              <div class="friend-info-block">
-                <span class="friend-name">@${fName}</span>
-                <div style="display:flex; flex-direction:column; gap:4px; margin-top:5px;">
-                  ${fHabits.filter(h => !h.isPrivate && !h.isArchived).map(h => `<span style="font-size:0.8rem; color:#a4b3c1;">${h.emoji || '🎯'} ${h.name} (${h.streak}d streak)</span>`).join('')}
-                </div>
-              </div>
-              <div class="friend-interactive-zone">
-                <span class="friend-score">${score} XP</span>
-                <button class="friend-remove-btn" data-remove-uid="${friendUid}">Drop</button>
-              </div>
-            </div>
-          `;
-        }
-      }
-      friendsListZone.innerHTML = mergedOutputHtml || `<p style="color:#6c7a86;">No profile connections are responsive.</p>`;
-    }
-
-    document.addEventListener('click', async (e) => {
-      const targetUid = e.target.getAttribute('data-remove-uid');
-      if(targetUid && e.target.classList.contains('friend-remove-btn')) {
-        if(confirm("Break network tracking connection with this profile user?")) {
-          myFriendsList = myFriendsList.filter(uid => uid !== targetUid);
-          await saveHabitsToCloud();
-          loadFriendsListUI();
-        }
-      }
-    });
-function renderAchievementsTab() {
-      // Refresh calculations
+    function renderAchievementsTab() {
       updateUserLevelDisplay();
       
-      // Calculate Multipliers Status Row
       let highestStreak = 0;
       let activeBonusText = "No daily streaks active right now. Check a habit off to begin!";
       
@@ -1227,13 +775,11 @@ function renderAchievementsTab() {
       
       document.getElementById('achieve-multiplier-status').innerHTML = activeBonusText;
 
-      // Render Badges Matrix
       const badgesGrid = document.getElementById('achieve-badges-grid');
       if(!badgesGrid) return;
       badgesGrid.innerHTML = '';
 
       BADGE_CONFIGS.forEach(badge => {
-        // Find if any habit has reached this milestone
         let recordStreak = 0;
         habits.forEach(h => {
           if(h.streak > recordStreak) recordStreak = h.streak;
@@ -1259,6 +805,490 @@ function renderAchievementsTab() {
         badgesGrid.appendChild(card);
       });
     }
+
+    // Master Authentication Engine Integration
+    authSubmitBtn.addEventListener('click', async () => {
+      const email = authEmail.value.trim(); 
+      const password = authPassword.value;
+      const username = authUsername.value.trim().toLowerCase();
+      const confirmPassword = authConfirmPassword.value;
+
+      if (emailError) emailError.innerText = "";
+      if (passwordError) passwordError.innerText = "";
+
+      if (!email || !password) {
+        alert("Please compile both your credentials.");
+        return;
+      }
+
+      if (isLoginMode) {
+        try {
+          await signInWithEmailAndPassword(auth, email, password);
+        } catch (e) {
+          passwordError.innerText = "Invalid login sequence: " + e.message;
+        }
+      } else {
+        if (!username) {
+          alert("A unique handle name is necessary.");
+          return;
+        }
+        if (password !== confirmPassword) {
+          alert("Passwords mismatch.");
+          return;
+        }
+
+        try {
+          const usernameCheckDoc = await getDoc(doc(db, "usernames", username));
+          if (usernameCheckDoc.exists() && auth.currentUser?.email === null) {
+            alert("Username already standard with another elite.");
+            return;
+          }
+
+          if (auth.currentUser && auth.currentUser.isAnonymous) {
+            const credential = EmailAuthProvider.credential(email, password);
+            await linkWithCredential(auth.currentUser, credential);
+            await setDoc(doc(db, "users", auth.currentUser.uid), { username: username, email: email, friends: [] }, { merge: true });
+            await setDoc(doc(db, "usernames", username), { uid: auth.currentUser.uid });
+            alert("Account fully converted!");
+          } else {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            await setDoc(doc(db, "users", userCredential.user.uid), { username: username, email: email, friends: [] });
+            await setDoc(doc(db, "usernames", username), { uid: userCredential.user.uid });
+          }
+        } catch (e) {
+          emailError.innerText = "Error executing registration request: " + e.message;
+        }
+      }
+    });
+
+    // Lifecycle Synchronization Listeners
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        authView.classList.add('hidden');
+        dashboardView.classList.remove('hidden');
+        headerUserBadge.classList.remove('hidden');
+        
+        avatarToggleBtn.innerText = user.isAnonymous ? "👤" : (user.email ? user.email.charAt(0).toUpperCase() : "?");
+        dropdownUserEmail.innerText = user.isAnonymous ? "Guest Session Profile" : user.email;
+
+        if (user.isAnonymous) {
+          myUsername = "guest";
+          userDisplayHandle.innerText = "Guest Track Profile Mode";
+          dropdownUsernameTxt.innerText = "Anonymous Agent";
+          copyUsernameBtn.classList.add('hidden');
+          dropdownUpgradeAccountBtn.classList.remove('hidden');
+          loadLocalHabitsData();
+        } else {
+          copyUsernameBtn.classList.remove('hidden');
+          dropdownUpgradeAccountBtn.classList.add('hidden');
+          const userProfileRef = doc(db, "users", user.uid);
+          const userProfileSnap = await getDoc(userProfileRef);
+          
+          if (userProfileSnap.exists()) {
+            myUsername = userProfileSnap.data().username || "user";
+            myFriendsList = userProfileSnap.data().friends || [];
+          } else {
+            myUsername = "user";
+            myFriendsList = [];
+          }
+          userDisplayHandle.innerText = `@${myUsername}`;
+          dropdownUsernameTxt.innerText = `@${myUsername}`;
+          await fetchHabitsFromCloud();
+        }
+      } else {
+        currentUser = null;
+        habits = [];
+        myUsername = "";
+        myFriendsList = [];
+        authView.classList.remove('hidden');
+        dashboardView.classList.add('hidden');
+        headerUserBadge.classList.add('hidden');
+        avatarDropdownBox.classList.add('hidden');
+      }
+    });
+
+    logoutActionBtn.addEventListener('click', () => signOut(auth));
+
+    async function fetchHabitsFromCloud() {
+      if (!currentUser || currentUser.isAnonymous) return;
+      try {
+        const docSnap = await getDoc(doc(db, "habits", currentUser.uid));
+        if (docSnap.exists()) {
+          habits = docSnap.data().habitsList || [];
+        } else {
+          habits = [];
+        }
+        renderHabits();
+      } catch (e) {
+        console.error("Cloud engine error reading data stream: ", e);
+      }
+    }
+
+    async function saveHabitsToCloud() {
+      if (!currentUser) return;
+      if (currentUser.isAnonymous) {
+        localStorage.setItem(`habits_guest`, JSON.stringify(habits));
+        return;
+      }
+      try {
+        await setDoc(doc(db, "habits", currentUser.uid), { habitsList: habits });
+        // Synchronously execute point recalculation logic on standard saves
+        const totalXp = calculateTrueXP();
+        await updateDoc(doc(db, "users", currentUser.uid), { xpScore: totalXp });
+      } catch (e) {
+        console.error("Cloud payload delivery fail: ", e);
+      }
+    }
+
+    function loadLocalHabitsData() {
+      const stored = localStorage.getItem(`habits_guest`);
+      habits = stored ? JSON.parse(stored) : [];
+      renderHabits();
+    }
+
+    habitForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = habitInput.value.trim();
+      if (!text) return;
+
+      const newHabit = {
+        id: 'h_' + Date.now() + Math.random().toString(36).substr(2, 4),
+        name: text,
+        emoji: habitEmojiSelect.value,
+        isPrivate: habitPrivacyCheck.checked,
+        streak: 0,
+        lastCompleted: null,
+        isArchived: false,
+        history: []
+      };
+
+      habits.push(newHabit);
+      habitInput.value = '';
+      await saveHabitsToCloud();
+      renderHabits();
+    });
+
+    function renderHabits() {
+      habitsList.innerHTML = '';
+      updateUserLevelDisplay();
+
+      const activeList = habits.filter(h => showArchivedMode ? h.isArchived : !h.isArchived);
+
+      if (activeList.length === 0) {
+        habitsList.innerHTML = `<div style="text-align:center; padding:30px; color:#6c7a86; font-weight:600;">${showArchivedMode ? 'No archived habits discovered.' : 'No active tracks. Set an objective above!'}</div>`;
+        return;
+      }
+
+      activeList.forEach(habit => {
+        const card = document.createElement('div');
+        card.className = `habit-card ${habit.isArchived ? 'archived-state' : ''}`;
+        
+        let currentProgress = 0;
+        let targetedCap = 7;
+        let milestoneHeadline = "Tier 1: Foundation";
+
+        for (let i = 0; i < MILESTONE_TIERS.length; i++) {
+          if (habit.streak < MILESTONE_TIERS[i]) {
+            targetedCap = MILESTONE_TIERS[i];
+            const lowerRange = i === 0 ? 0 : MILESTONE_TIERS[i-1];
+            currentProgress = ((habit.streak - lowerRange) / (targetedCap - lowerRange)) * 100;
+            milestoneHeadline = `Milestone: Day ${targetedCap}`;
+            break;
+          } else if (i === MILESTONE_TIERS.length - 1) {
+            targetedCap = 700;
+            currentProgress = 100;
+            milestoneHeadline = "Legendary Infinity Status Maxed";
+          }
+        }
+
+        const todayString = new Date().toDateString();
+        const isCheckedToday = habit.lastCompleted && new Date(habit.lastCompleted).toDateString() === todayString;
+
+        card.innerHTML = `
+          <div class="habit-header">
+            <div class="habit-title"><span>${habit.emoji}</span> ${habit.name}</div>
+            <div class="status-badge-cluster">
+              ${habit.isPrivate ? '<span class="privacy-mini-icon">🔒</span>' : ''}
+              <div class="streak-badge">🔥 ${habit.streak}</div>
+            </div>
+          </div>
+          
+          <div class="milestone-container">
+            <div class="milestone-meta">
+              <span>${milestoneHeadline}</span>
+              <span>${habit.streak}/${targetedCap} Days</span>
+            </div>
+            <div class="progress-track"><div class="progress-fill" style="width: ${currentProgress}%"></div></div>
+          </div>
+
+          <div class="habit-actions">
+            <button class="btn-complete ${isCheckedToday ? 'checked' : ''}" data-id="${habit.id}">
+              ${isCheckedToday ? '✓ Tracked Today' : 'Mark Complete +'}
+            </button>
+            <button class="btn-edit" data-id="${habit.id}">⚙️ Options</button>
+            <button class="btn-calendar" data-id="${habit.id}">📅</button>
+          </div>
+          <div id="calendar-area-${habit.id}" class="hidden"></div>
+          <div id="edit-area-${habit.id}" class="hidden"></div>
+        `;
+
+        habitsList.appendChild(card);
+      });
+    }
+
+    // Dynamic Element Click Management Routing System
+    document.body.addEventListener('click', async (e) => {
+      const target = e.target;
+      const habitId = target.getAttribute('data-id');
+      if (!habitId) return;
+
+      const habit = habits.find(h => h.id === habitId);
+      if (!habit) return;
+
+      if(target.classList.contains('btn-complete')) {
+        const todayString = new Date().toDateString();
+        const isAlreadyChecked = habit.lastCompleted && new Date(habit.lastCompleted).toDateString() === todayString;
+        
+        if (isAlreadyChecked) {
+          alert("This routine parameter has already been established today.");
+          return;
+        }
+
+        habit.streak += 1;
+        const now = Date.now();
+        habit.lastCompleted = now;
+        if(!habit.history) habit.history = [];
+        habit.history.push(now);
+
+        if (MILESTONE_TIERS.includes(habit.streak)) {
+          milestoneText.innerText = `Your dedication to "${habit.name}" has reached a massive milestone of ${habit.streak} days in a row!\n\n🎁 +100 XP Bounty Awarded!`;
+          milestoneModal.classList.remove('hidden');
+        }
+        await saveHabitsToCloud();
+        renderHabits();
+      }
+
+      if(target.classList.contains('btn-edit')) {
+        const container = document.getElementById(`edit-area-${habit.id}`);
+        if(!container) return;
+        
+        if(!container.classList.contains('hidden')) {
+          container.classList.add('hidden');
+          return;
+        }
+        
+        container.innerHTML = `
+          <div class="edit-panel">
+            <div style="font-size:0.85rem; font-weight:bold; color:#8495a5; margin-bottom: -4px;">Modify Configuration</div>
+            <input type="text" id="edit-input-${habit.id}" class="auth-input" value="${habit.name}" style="padding:8px;">
+            <div class="edit-panel-actions-row">
+              <button class="btn-inline-save" id="save-edit-${habit.id}">Save Configuration</button>
+              <div class="edit-panel-danger-zone">
+                <button class="btn-inline-archive" id="archive-edit-${habit.id}">${habit.isArchived ? 'Unarchive' : 'Archive'}</button>
+                <button class="btn-inline-delete" id="delete-edit-${habit.id}">Delete</button>
+              </div>
+            </div>
+          </div>
+        `;
+        container.classList.remove('hidden');
+
+        document.getElementById(`save-edit-${habit.id}`).addEventListener('click', async () => {
+          const newName = document.getElementById(`edit-input-${habit.id}`).value.trim();
+          if(newName) habit.name = newName;
+          await saveHabitsToCloud();
+          renderHabits();
+        });
+
+        document.getElementById(`archive-edit-${habit.id}`).addEventListener('click', async () => {
+          habit.isArchived = !habit.isArchived;
+          await saveHabitsToCloud();
+          renderHabits();
+        });
+
+        document.getElementById(`delete-edit-${habit.id}`).addEventListener('click', async () => {
+          if(confirm("Are you absolutely sure you want to permanently discard this track?")) {
+            habits = habits.filter(h => h.id !== habit.id);
+            await saveHabitsToCloud();
+            renderHabits();
+          }
+        });
+      }
+
+      if (target.classList.contains('btn-calendar')) {
+        const calArea = document.getElementById(`calendar-area-${habit.id}`);
+        if (!calArea) return;
+
+        if (!calArea.classList.contains('hidden')) {
+          calArea.classList.add('hidden');
+          return;
+        }
+
+        const now = new Date();
+        renderCalendarGrid(calArea, habit, now.getFullYear(), now.getMonth());
+        calArea.classList.remove('hidden');
+      }
+    });
+
+    function renderCalendarGrid(container, habit, year, month) {
+      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      const firstDayIdx = new Date(year, month, 1).getDay();
+      const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+      
+      container.innerHTML = `
+        <div class="calendar-view">
+          <div class="calendar-navbar">
+            <button class="calendar-nav-btn" id="cal-prev-${habit.id}">◀</button>
+            <div style="font-weight:bold; font-size:0.9rem; color:#ff9800;">${monthNames[month]} ${year}</div>
+            <button class="calendar-nav-btn" id="cal-next-${habit.id}">▶</button>
+          </div>
+          <div class="calendar-grid" id="grid-box-${habit.id}"></div>
+        </div>
+      `;
+
+      const gridBox = document.getElementById(`grid-box-${habit.id}`);
+      const labels = ["S", "M", "T", "W", "T", "F", "S"];
+      labels.forEach(lbl => {
+        const labelDiv = document.createElement('div');
+        labelDiv.className = 'calendar-day-label';
+        labelDiv.innerText = lbl;
+        gridBox.appendChild(labelDiv);
+      });
+
+      for (let i = 0; i < firstDayIdx; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'calendar-cell empty';
+        gridBox.appendChild(emptyCell);
+      }
+
+      for (let day = 1; day <= totalDaysInMonth; day++) {
+        const cell = document.createElement('div');
+        cell.className = 'calendar-cell';
+        cell.innerText = day;
+
+        const cellDateStr = new Date(year, month, day).toDateString();
+        const wasCompleted = habit.history && habit.history.some(timestamp => new Date(timestamp).toDateString() === cellDateStr);
+
+        if (wasCompleted) cell.classList.add('completed');
+        gridBox.appendChild(cell);
+      }
+
+      document.getElementById(`cal-prev-${habit.id}`).addEventListener('click', () => {
+        let prevMonth = month - 1;
+        let prevYear = year;
+        if (prevMonth < 0) { prevMonth = 11; prevYear--; }
+        renderCalendarGrid(container, habit, prevYear, prevMonth);
+      });
+
+      document.getElementById(`cal-next-${habit.id}`).addEventListener('click', () => {
+        let nextMonth = month + 1;
+        let nextYear = year;
+        if (nextMonth > 11) { nextMonth = 0; nextYear++; }
+        renderCalendarGrid(container, habit, nextYear, nextMonth);
+      });
+    }
+
+    // Social Network Management Handlers
+    friendSearchBtn.addEventListener('click', async () => {
+      const targetQuery = friendSearchInput.value.trim().toLowerCase();
+      searchResultsZone.innerHTML = "";
+      if (!targetQuery) return;
+      if (targetQuery === myUsername) {
+        searchResultsZone.innerHTML = `<div style="font-size:0.85rem; text-align:center; color:#ea4335; font-weight:600;">You cannot connect with your own unique instance.</div>`;
+        return;
+      }
+
+      try {
+        const lookupSnap = await getDoc(doc(db, "usernames", targetQuery));
+        if (!lookupSnap.exists()) {
+          searchResultsZone.innerHTML = `<div style="font-size:0.85rem; text-align:center; color:#8495a5; font-weight:600;">No profile discovered matching that identity.</div>`;
+          return;
+        }
+        
+        const targetUid = lookupSnap.data().uid;
+        const targetUserSnap = await getDoc(doc(db, "users", targetUid));
+        const targetData = targetUserSnap.data();
+
+        const row = document.createElement('div');
+        row.className = "search-result-box";
+        row.innerHTML = `
+          <div style="font-weight:bold; font-size:0.95rem;">@${targetData.username}</div>
+          <button class="submit-action-btn" id="add-friend-trigger" style="height:32px; padding:0 12px; font-size:0.8rem;">Connect +</button>
+        `;
+        searchResultsZone.appendChild(row);
+
+        document.getElementById('add-friend-trigger').addEventListener('click', async () => {
+          if (myFriendsList.includes(targetUid)) {
+            alert("This entity already occupies space inside your network connection matrix.");
+            return;
+          }
+          myFriendsList.push(targetUid);
+          await updateDoc(doc(db, "users", currentUser.uid), { friends: myFriendsList });
+          friendSearchInput.value = "";
+          searchResultsZone.innerHTML = "";
+          loadFriendsListUI();
+        });
+
+      } catch(e) {
+        console.error("Failed executing search index query operations: ", e);
+      }
+    });
+
+    async function loadFriendsListUI() {
+      friendsListZone.innerHTML = `<div style="text-align:center; padding:15px; font-size:0.9rem; color:#8495a5; font-weight:600;">Syncing networks status...</div>`;
+      if (!currentUser || currentUser.isAnonymous) {
+        friendsListZone.innerHTML = `<div style="text-align:center; padding:15px; font-size:0.85rem; color:#6c7a86; font-weight:600;">Anonymous entities do not maintain persistent social capabilities. Register an account to explore connections.</div>`;
+        return;
+      }
+
+      if (myFriendsList.length === 0) {
+        friendsListZone.innerHTML = `<div style="text-align:center; padding:20px; font-size:0.9rem; color:#6c7a86; font-weight:600;">Your direct network is empty. Find connections above!</div>`;
+        return;
+      }
+
+      try {
+        friendsListZone.innerHTML = "";
+        for (let friendUid of myFriendsList) {
+          const snap = await getDoc(doc(db, "users", friendUid));
+          if (snap.exists()) {
+            const data = snap.data();
+            const score = data.xpScore || 0;
+            const friendLvlObj = getCurrentLevelData(score);
+
+            const card = document.createElement('div');
+            card.className = "friend-row";
+            card.innerHTML = `
+              <div class="friend-info-block">
+                <div class="friend-name">@${data.username}</div>
+                <div style="font-size:0.75rem; color:#8495a5; font-weight:bold;">${friendLvlObj.title} (Lvl ${friendLvlObj.level})</div>
+              </div>
+              <div class="friend-interactive-zone">
+                <div class="friend-score">${score} XP</div>
+                <button class="friend-remove-btn" data-remove-id="${friendUid}">Disconnect</button>
+              </div>
+            `;
+            friendsListZone.appendChild(card);
+          }
+        }
+
+        // Handle disconnect dynamic actions
+        const buttons = friendsListZone.querySelectorAll('.friend-remove-btn');
+        buttons.forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const idToRemove = btn.getAttribute('data-remove-id');
+            if(confirm("Confirm removal of this user profile connection from your network?")) {
+              myFriendsList = myFriendsList.filter(id => id !== idToRemove);
+              await updateDoc(doc(db, "users", currentUser.uid), { friends: myFriendsList });
+              loadFriendsListUI();
+            }
+          });
+        });
+
+      } catch(e) {
+        console.error("Error drawing social networking dashboards: ", e);
+      }
+    }
+
     modalCloseAction.addEventListener('click', () => milestoneModal.classList.add('hidden'));
   </script>
 </body>
