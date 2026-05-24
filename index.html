@@ -886,15 +886,18 @@
           const userProfileRef = doc(db, "users", user.uid);
           const userProfileSnap = await getDoc(userProfileRef);
           
-          if (userProfileSnap.exists()) {
-        myUsername = userProfileSnap.data().username || user.email.split('@')[0] || "user";
-        myFriendsList = userProfileSnap.data().friends || [];
-    } else {
-        myUsername = user.email.split('@')[0] || "user";
-        myFriendsList = [];
-    }
-          userDisplayHandle.innerText = `@${myUsername}`;
-          dropdownUsernameTxt.innerText = `@${myUsername}`;
+		if (userProfileSnap.exists()) {
+            const emailPrefix = user.email ? user.email.split('@')[0] : "user";
+            myUsername = userProfileSnap.data().username || emailPrefix || "user";
+            myFriendsList = userProfileSnap.data().friends || [];
+        } else {
+            const emailPrefix = user.email ? user.email.split('@')[0] : "user";
+            myUsername = emailPrefix || "user";
+            myFriendsList = [];
+        }
+
+        userDisplayHandle.innerText = `@${myUsername}`;
+        dropdownUsernameTxt.innerText = `@${myUsername}`;
           await fetchHabitsFromCloud();
         }
       } else {
