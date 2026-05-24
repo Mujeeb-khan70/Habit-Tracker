@@ -894,17 +894,14 @@
             const emailPrefix = user?.email ? user.email.split('@')[0] : "user";
             myUsername = emailPrefix || "user";
             myFriendsList = [];
-        
-
-        userDisplayHandle.innerText = `@${myUsername}`;
-        dropdownUsernameTxt.innerText = `@${myUsername}`;
         }
 
         userDisplayHandle.innerText = `@${myUsername}`;
         dropdownUsernameTxt.innerText = `@${myUsername}`;
-          await fetchHabitsFromCloud();
+        await fetchHabitsFromCloud();
         
-		else {
+    } else {
+        // This handles when a user logs out or is a guest
         currentUser = null;
         habits = [];
         myUsername = "";
@@ -913,8 +910,8 @@
         dashboardView.classList.add('hidden');
         headerUserBadge.classList.add('hidden');
         avatarDropdownBox.classList.add('hidden');
-      }
-    });
+    }
+});
 
     logoutActionBtn.addEventListener('click', () => signOut(auth));
 
