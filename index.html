@@ -865,53 +865,35 @@
     // Lifecycle Synchronization Listeners
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        currentUser = user;
-        authView.classList.add('hidden');
-        dashboardView.classList.remove('hidden');
-        headerUserBadge.classList.remove('hidden');
-        
-        avatarToggleBtn.innerText = user.isAnonymous ? "👤" : (user.email ? user.email.charAt(0).toUpperCase() : "?");
-        dropdownUserEmail.innerText = user.isAnonymous ? "Guest Session Profile" : user.email;
+            currentUser = user;
+            const userProfileRef = doc(db, "users", user.uid);
+            const userProfileSnap = await getDoc(userProfileRef);
 
-        if (user.isAnonymous) {
-          myUsername = "guest";
-          userDisplayHandle.innerText = "Guest Track Profile Mode";
-          dropdownUsernameTxt.innerText = "Anonymous Agent";
-          copyUsernameBtn.classList.add('hidden');
-          dropdownUpgradeAccountBtn.classList.remove('hidden');
-          loadLocalHabitsData();
+            if (userProfileSnap.exists()) {
+                const emailPrefix = user?.email ? user.email.split('@')[0] : "user";
+                myUsername = userProfileSnap.data().username || emailPrefix || "user";
+                myFriendsList = userProfileSnap.data().friends || [];
+            } else {
+                const emailPrefix = user?.email ? user.email.split('@')[0] : "user";
+                myUsername = emailPrefix || "user";
+                myFriendsList = [];
+            }
+
+            userDisplayHandle.innerText = `@${myUsername}`;
+            dropdownUsernameTxt.innerText = `@${myUsername}`;
+            await fetchHabitsFromCloud();
+            
         } else {
-          copyUsernameBtn.classList.remove('hidden');
-          dropdownUpgradeAccountBtn.classList.add('hidden');
-          const userProfileRef = doc(db, "users", user.uid);
-          const userProfileSnap = await getDoc(userProfileRef);
-          
-		if (userProfileSnap.exists()) {
-            const emailPrefix = user?.email ? user.email.split('@')[0] : "user";
-            myUsername = userProfileSnap.data().username || emailPrefix || "user";
-            myFriendsList = userProfileSnap.data().friends || [];
-        } else {
-            const emailPrefix = user?.email ? user.email.split('@')[0] : "user";
-            myUsername = emailPrefix || "user";
+            currentUser = null;
+            habits = [];
+            myUsername = "";
             myFriendsList = [];
+            authView.classList.remove('hidden');
+            dashboardView.classList.add('hidden');
+            headerUserBadge.classList.add('hidden');
+            avatarDropdownBox.classList.add('hidden');
         }
-
-        userDisplayHandle.innerText = `@${myUsername}`;
-        dropdownUsernameTxt.innerText = `@${myUsername}`;
-        await fetchHabitsFromCloud();
-        
-    } else {
-        // This handles when a user logs out or is a guest
-        currentUser = null;
-        habits = [];
-        myUsername = "";
-        myFriendsList = [];
-        authView.classList.remove('hidden');
-        dashboardView.classList.add('hidden');
-        headerUserBadge.classList.add('hidden');
-        avatarDropdownBox.classList.add('hidden');
-    }
-});
+    });
 
     logoutActionBtn.addEventListener('click', () => signOut(auth));
 
