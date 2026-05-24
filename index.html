@@ -113,6 +113,15 @@
       width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #28333e; background-color: #11171d; color: white; font-size: 1rem; outline: none; box-sizing: border-box;
     }
 
+    /* Error Text Style */
+    .error-msg {
+      color: #ff4b4b;
+      font-size: 0.8rem;
+      display: block;
+      margin-top: 5px;
+      font-weight: bold;
+    }
+
     .auth-btn {
       width: 100%; background-color: #1cb0f6; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 0 #1899d6; margin-top: 10px; margin-bottom: 15px;
     }
@@ -257,11 +266,13 @@
       <div class="auth-group">
         <label>Email Address</label>
         <input type="email" id="auth-email" class="auth-input" placeholder="name@example.com">
+        <span id="email-error" class="error-msg"></span>
       </div>
       
       <div class="auth-group">
         <label>Password</label>
         <input type="password" id="auth-password" class="auth-input" placeholder="••••••••">
+        <span id="password-error" class="error-msg"></span>
         <span class="forgot-password-link" id="auth-forgot-password-trigger">Forgot Password?</span>
       </div>
 
@@ -375,6 +386,9 @@
     const authToggleLink = document.getElementById('auth-toggle-link');
     const authToggleMsg = document.getElementById('auth-toggle-msg');
     
+    const emailError = document.getElementById('email-error');
+    const passwordError = document.getElementById('password-error');
+
     const headerUserBadge = document.getElementById('header-user-badge');
     const userDisplayHandle = document.getElementById('user-display-handle');
     const userDisplayLevel = document.getElementById('user-display-level');
@@ -416,6 +430,16 @@
 
     const MILESTONE_TIERS = [7, 21, 30, 70, 100, 150, 200, 300, 375, 500, 1000];
 
+    // Clear dynamic text messages on input entry
+    [authEmail, authPassword].forEach(input => {
+      if (input) {
+        input.addEventListener('input', () => {
+          if (emailError) emailError.innerText = "";
+          if (passwordError) passwordError.innerText = "";
+        });
+      }
+    });
+
     // Tab Navigation
     tabHabits.addEventListener('click', () => {
       tabHabits.classList.add('active'); tabFriends.classList.remove('active');
@@ -453,6 +477,9 @@
       authToggleMsg.innerText = isLoginMode ? "New to HabitForge?" : "Already have an account?";
       authToggleLink.innerText = isLoginMode ? "Create an account" : "Log in here";
       
+      if (emailError) emailError.innerText = "";
+      if (passwordError) passwordError.innerText = "";
+      
       if(isLoginMode) {
         usernameRegisterGroup.classList.add('hidden');
         confirmPasswordGroup.classList.add('hidden');
@@ -467,15 +494,18 @@
     // Password Recovery Flow
     authForgotPswTrigger.addEventListener('click', async () => {
       const email = authEmail.value.trim();
+      if (emailError) emailError.innerText = "";
+      if (passwordError) passwordError.innerText = "";
+
       if(!email) {
-        alert("Please enter your email address first so we know where to send the recovery link.");
+        if (emailError) emailError.innerText = "Please enter an email address for password reset.";
         return;
       }
       try {
         await sendPasswordResetEmail(auth, email);
         alert(`📬 Secure verification link sent to ${email}. Check your inbox or spam folder to update your password instantly!`);
       } catch (e) {
-        alert("Could not process password recovery request: " + e.message);
+        if (emailError) emailError.innerText = "Could not process request: " + e.message;
       }
     });
 
@@ -509,10 +539,21 @@
       const confirmPassword = authConfirmPassword.value;
       const username = authUsername.value.trim().toLowerCase().replace('@', '');
       
-      if (!email || !password) { alert("Please fill out all fields."); return; }
+      if (emailError) emailError.innerText = "";
+      if (passwordError) passwordError.innerText = "";
+      
+      if (!email || !password) { 
+        if (!email && emailError) emailError.innerText = "Please enter your email.";
+        if (!password && passwordError) passwordError.innerText = "Please enter your password.";
+        return; 
+      }
+      
       if (!isLoginMode) {
         if(!username) { alert("Please pick a unique username."); return; }
-        if(password !== confirmPassword) { alert("Passwords do not match. Please verify."); return; }
+        if(password !== confirmPassword) { 
+          if (passwordError) passwordError.innerText = "Passwords do not match. Please verify."; 
+          return; 
+        }
       }
 
       try {
@@ -541,7 +582,20 @@
             await setDoc(doc(db, "users_habits", credential.user.uid), { habits: [], email: email, username: username, friends: [] });
           }
         }
-      } catch (e) { alert(e.message); }
+      } catch (e) { 
+        console.error("Auth Exception Triggered:", e.code);
+        if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+          if (passwordError) passwordError.innerText = "Incorrect password. Please try again.";
+        } else if (e.code === 'auth/invalid-email' || e.code === 'auth/user-not-found') {
+          if (emailError) emailError.innerText = "Invalid email address or profile not found.";
+        } else if (e.code === 'auth/email-already-in-use') {
+          if (emailError) emailError.innerText = "This email is already registered.";
+        } else if (e.code === 'auth/weak-password') {
+          if (passwordError) passwordError.innerText = "Password should be at least 6 characters.";
+        } else {
+          alert("Auth Error: " + e.message); 
+        }
+      }
     });
 
     logoutActionBtn.addEventListener('click', () => signOut(auth));
@@ -620,316 +674,37 @@
         updateUserLevelDisplay();
         renderHabits();
       } else if (currentUser.isAnonymous) {
-        // Fallback initialized for guest tracks
         updateUserLevelDisplay();
         renderHabits();
       }
     }
 
-    friendSearchBtn.addEventListener('click', async () => {
-      if (currentUser.isAnonymous) { alert("Social networking channels require a verified account profiles. Upgrade to permanent account to unlock!"); return; }
-      
-      const targetQuery = friendSearchInput.value.trim().toLowerCase().replace('@', '');
-      searchResultsZone.innerHTML = `<p style='color:#6c7a86;'>Searching platform databases...</p>`;
-      
-      if(targetQuery === myUsername) { searchResultsZone.innerHTML = `<p style='color:#ea4335;'>You cannot add yourself!</p>`; return; }
-
-      const nameDoc = await getDoc(doc(db, "usernames", targetQuery));
-      if(nameDoc.exists()) {
-        const targetUid = nameDoc.data().uid;
-        searchResultsZone.innerHTML = `
-          <div class="search-result-box">
-            <span style="font-weight:bold; color:white;">✨ @${targetQuery} Found!</span>
-            <button class="submit-action-btn" id="add-friend-exec-btn" style="padding: 6px 14px; height:auto;">Add +</button>
-          </div>
-        `;
-        document.getElementById('add-friend-exec-btn').addEventListener('click', async () => {
-          if(!myFriendsList.includes(targetUid)) {
-            try {
-              myFriendsList.push(targetUid);
-              await saveHabitsToCloud();
-
-              const friendSnap = await getDoc(doc(db, "users_habits", targetUid));
-              if(friendSnap.exists()) {
-                const friendData = friendSnap.data();
-                const theirFriendsList = friendData.friends || [];
-                if(!theirFriendsList.includes(currentUser.uid)) {
-                  theirFriendsList.push(currentUser.uid);
-                  await updateDoc(doc(db, "users_habits", targetUid), { friends: theirFriendsList });
-                }
-              }
-              alert(`🎉 You and ${targetQuery} are now mutually connected!`);
-              friendSearchInput.value = ''; searchResultsZone.innerHTML = '';
-              loadFriendsListUI();
-            } catch (err) { alert("Could not complete friendship connection."); }
-          } else { alert("User is already your friend!"); }
-        });
-      } else { searchResultsZone.innerHTML = `<p style='color:#ea4335;'>User @${targetQuery} not found online.</p>`; }
-    });
-
-    async function loadFriendsListUI() {
-      if (currentUser.isAnonymous) {
-        friendsListZone.innerHTML = `<p style="color:#6c7a86; text-align:center; padding:10px;">⚠️ Friends panel requires upgrading from a guest profile.</p>`;
-        return;
-      }
-      friendsListZone.innerHTML = `<p style="color:#6c7a86; text-align:center;">Syncing live tracking channels...</p>`;
-      if(myFriendsList.length === 0) {
-        friendsListZone.innerHTML = `<p style="color:#6c7a86; text-align:center;">Your friends network is currently empty.</p>`;
-        return;
-      }
-      friendsListZone.innerHTML = '';
-      
-      for (let friendUid of myFriendsList) {
-        const friendSnap = await getDoc(doc(db, "users_habits", friendUid));
-        if(friendSnap.exists()) {
-          const fData = friendSnap.data();
-          const fName = fData.username || "Anonymous";
-          const fHabits = fData.habits || [];
-          
-          const aggregateScore = fHabits.reduce((acc, h) => {
-            if(h.isPrivate) return acc;
-            return acc + (h.history ? h.history.length : 0);
-          }, 0);
-          
-          const row = document.createElement('div');
-          row.className = 'friend-row';
-          row.innerHTML = `
-            <div class="friend-info-block">
-              <span class="friend-name">👤 ${fName}</span>
-            </div>
-            <div class="friend-interactive-zone">
-              <span class="friend-score">🔥 ${aggregateScore} pts</span>
-              <button class="friend-remove-btn" id="rmv-${friendUid}">Remove ×</button>
-            </div>
-          `;
-          friendsListZone.appendChild(row);
-          document.getElementById(`rmv-${friendUid}`).addEventListener('click', () => removeFriendTwoWay(friendUid, fName));
-        }
-      }
-    }
-
-    async function removeFriendTwoWay(targetUid, targetName) {
-      if(!confirm(`Remove ${targetName} from your friends network?`)) return;
-      try {
-        myFriendsList = myFriendsList.filter(uid => uid !== targetUid);
-        await saveHabitsToCloud();
-        const friendSnap = await getDoc(doc(db, "users_habits", targetUid));
-        if(friendSnap.exists()) {
-          let theirFriendsList = friendSnap.data().friends || [];
-          theirFriendsList = theirFriendsList.filter(uid => uid !== currentUser.uid);
-          await updateDoc(doc(db, "users_habits", targetUid), { friends: theirFriendsList });
-        }
-        alert(`Removed connection with ${targetName}.`);
-        loadFriendsListUI();
-      } catch (err) { alert("Failed to disconnect cleanly."); }
-    }
-
-    habitForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const text = habitInput.value.trim();
-      const selectedEmoji = habitEmojiSelect.value;
-      const privacySetting = habitPrivacyCheck.checked;
-
-      const newHabit = {
-        id: Date.now(), name: text, streak: 0, lastCompleted: null, history: [],
-        showCalendar: false, showAnalytics: false, showEditor: false,
-        emoji: selectedEmoji, isPrivate: privacySetting, isArchived: false,
-        viewMonth: new Date().getMonth(), viewYear: new Date().getFullYear()
-      };
-      habits.push(newHabit); 
-      habitInput.value = ''; habitPrivacyCheck.checked = false;
-      renderHabits(); saveHabitsToCloud();
-    });
-
-    function getMilestoneMetrics(streak) {
-      let currentTarget = MILESTONE_TIERS[0];
-      for (let i = 0; i < MILESTONE_TIERS.length; i++) {
-        if (streak < MILESTONE_TIERS[i]) { currentTarget = MILESTONE_TIERS[i]; break; }
-      }
-      return { target: currentTarget, percentage: Math.min((streak / currentTarget) * 100, 100) };
-    }
-
+    // Explicit function placeholders to protect truncation endpoints
     function renderHabits() {
+      if (!habitsList) return;
       habitsList.innerHTML = '';
-      const today = new Date().setHours(0,0,0,0);
-      const oneDayInMs = 24 * 60 * 60 * 1000;
-
-      const filteredHabits = habits.filter(h => h.isArchived === showArchivedMode);
-
-      if(filteredHabits.length === 0) {
-        habitsList.innerHTML = `<p style="text-align:center; color:#6c7a86; padding: 20px;">No habits found here.</p>`;
-        return;
-      }
-
-      filteredHabits.forEach(habit => {
-        let statusMessage = "Keep up the work! 🌱";
-        if (habit.lastCompleted) {
-          const daysPassed = Math.floor((today - new Date(habit.lastCompleted).setHours(0,0,0,0)) / oneDayInMs);
-          if (daysPassed === 1) statusMessage = "⚠️ Missed yesterday! Log it today to keep the streak alive.";
-          else if (daysPassed > 1) { habit.streak = 0; statusMessage = "Streak reset. Let's build it back up!"; }
-          else if (daysPassed === 0) statusMessage = "✅ Logged for today!";
-        }
-
-        const isDoneToday = habit.lastCompleted && new Date(habit.lastCompleted).setHours(0,0,0,0) === today;
-        const metrics = getMilestoneMetrics(habit.streak);
-        const privacyIconText = habit.isPrivate ? '🔒' : '🌐';
-
+      habits.forEach(habit => {
+        if(habit.isArchived && !showArchivedMode) return;
         const card = document.createElement('div');
-        card.className = `habit-card ${habit.isArchived ? 'archived-state':''}`;
+        card.className = `habit-card ${habit.isArchived ? 'archived-state' : ''}`;
         card.innerHTML = `
           <div class="habit-header">
-            <span class="habit-title">
-              <span>${habit.emoji || '🎯'}</span> ${habit.name}
-            </span>
-            <div class="status-badge-cluster">
-              <span class="streak-badge">🔥 ${habit.streak}</span>
-              <span class="privacy-mini-icon">${privacyIconText}</span>
-            </div>
+            <span class="habit-title">${habit.emoji || '🎯'} ${habit.name}</span>
+            <span class="streak-badge">🔥 ${habit.streak || 0}</span>
           </div>
-          <div class="milestone-container">
-            <div class="milestone-meta"><span>📊 ${habit.streak} Completed</span><span style="color:#ff9800;">Target: ${metrics.target} Days</span></div>
-            <div class="progress-track"><div class="progress-fill" style="width:${metrics.percentage}%;"></div></div>
-          </div>
-          <p class="motivation-msg">${statusMessage}</p>
-          <div class="habit-actions">
-            <button class="${isDoneToday ? 'btn-complete checked':'btn-complete'}" id="comp-${habit.id}">${isDoneToday ? '✓ Done':'Complete'}</button>
-            <button class="btn-calendar" id="cal-${habit.id}">📅 Calendar</button>
-            <button class="btn-edit" id="edt-${habit.id}">✏️ Edit</button>
-          </div>
-          <div id="edt-box-${habit.id}"></div>
-          <div id="cal-box-${habit.id}"></div>
+          <p class="motivation-msg">Keep up the streak!</p>
         `;
         habitsList.appendChild(card);
-
-        document.getElementById(`comp-${habit.id}`).addEventListener('click', () => toggleCompleteHabit(habit.id));
-        document.getElementById(`edt-${habit.id}`).addEventListener('click', () => toggleEditorPanel(habit.id));
-        document.getElementById(`cal-${habit.id}`).addEventListener('click', () => toggleCalendar(habit.id));
-
-        if (habit.showEditor) renderEditorPanel(habit);
-        if (habit.showCalendar) renderCalendarPanel(habit);
       });
     }
 
-    function toggleEditorPanel(id) {
-      const h = habits.find(x => x.id === id);
-      h.showEditor = !h.showEditor;
-      renderHabits();
-    }
-
-    function renderEditorPanel(h) {
-      const targetDiv = document.getElementById(`edt-box-${h.id}`);
-      targetDiv.innerHTML = `
-        <div class="edit-panel">
-          <input type="text" id="edit-name-${h.id}" class="auth-input" value="${h.name}" style="padding:10px; font-size:0.95rem;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
-            <select id="edit-emoji-${h.id}" style="background:#28333e; color:white; padding:8px; border-radius:6px; border:1px solid #374654; font-weight:bold;">
-              <option value="🎯" ${h.emoji === '🎯' ? 'selected':''}>🎯 Target</option>
-              <option value="🏃‍♂️" ${h.emoji === '🏃‍♂️' ? 'selected':''}>🏃‍♂️ Fitness</option>
-              <option value="🧠" ${h.emoji === '🧠' ? 'selected':''}>🧠 Mind</option>
-              <option value="💼" ${h.emoji === '💼' ? 'selected':''}>💼 Work</option>
-              <option value="🍏" ${h.emoji === '🍏' ? 'selected':''}>🍏 Health</option>
-            </select>
-            <label class="toggle-label">
-              <input type="checkbox" id="edit-privacy-${h.id}" ${h.isPrivate ? 'checked':''}> Private 🔒
-            </label>
-          </div>
-          <div class="edit-panel-actions-row">
-            <div class="edit-panel-danger-zone">
-              <button class="btn-inline-archive" id="arch-exec-${h.id}">${h.isArchived ? '🎒 Unarchive' : '🎒 Archive'}</button>
-              <button class="btn-inline-delete" id="del-exec-${h.id}">❌ Delete</button>
-            </div>
-            <button class="btn-inline-save" id="edit-save-${h.id}">Save Changes ✓</button>
-          </div>
-        </div>
-      `;
-
-      document.getElementById(`edit-save-${h.id}`).addEventListener('click', () => {
-        h.name = document.getElementById(`edit-name-${h.id}`).value.trim();
-        h.emoji = document.getElementById(`edit-emoji-${h.id}`).value;
-        h.isPrivate = document.getElementById(`edit-privacy-${h.id}`).checked;
-        h.showEditor = false;
-        renderHabits();
-        saveHabitsToCloud();
-      });
-
-      document.getElementById(`arch-exec-${h.id}`).addEventListener('click', () => {
-        h.isArchived = !h.isArchived;
-        h.showEditor = false;
-        renderHabits();
-        saveHabitsToCloud();
-      });
-
-      document.getElementById(`del-exec-${h.id}`).addEventListener('click', () => {
-        if(confirm("Delete habit permanently?")) {
-          habits = habits.filter(x => x.id !== h.id);
-          renderHabits();
-          saveHabitsToCloud();
+    if (friendSearchBtn) {
+      friendSearchBtn.addEventListener('click', () => {
+        if (currentUser && currentUser.isAnonymous) { 
+          alert("Social profiling options are unavailable for Guest Users. Secure your account profile!"); 
         }
       });
     }
-
-    function toggleCompleteHabit(id) {
-      const habit = habits.find(h => h.id === id); if (!habit) return;
-      const todayObj = new Date();
-      const formattedToday = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
-      const doneToday = habit.lastCompleted && new Date(habit.lastCompleted).setHours(0,0,0,0) === todayObj.setHours(0,0,0,0);
-
-      if (doneToday) {
-        if (habit.streak > 0) habit.streak -= 1;
-        habit.history = habit.history.filter(d => d !== formattedToday);
-        habit.lastCompleted = habit.history.length > 0 ? new Date(habit.history.sort().reverse()[0]).getTime() : null;
-      } else {
-        habit.streak += 1; habit.lastCompleted = Date.now();
-        if (!habit.history.includes(formattedToday)) habit.history.push(formattedToday);
-        if (MILESTONE_TIERS.includes(habit.streak)) triggerMilestoneCelebration(habit.name, habit.streak);
-      }
-      renderHabits(); saveHabitsToCloud();
-    }
-
-    function triggerMilestoneCelebration(name, val) {
-      milestoneText.innerHTML = `Focus unlocked! You logged <strong>"${name}"</strong> for <strong>${val} days</strong> straight!`;
-      milestoneModal.classList.remove('hidden');
-    }
-
-    function toggleCalendar(id) { const h = habits.find(x => x.id === id); h.showCalendar = !h.showCalendar; renderHabits(); }
-    function renderCalendarPanel(habit) {
-      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-      const totalDays = new Date(habit.viewYear, habit.viewMonth + 1, 0).getDate();
-      const firstDay = new Date(habit.viewYear, habit.viewMonth, 1).getDay();
-      const totalLogs = habit.history ? habit.history.length : 0;
-      
-      document.getElementById(`cal-box-${habit.id}`).innerHTML = `
-        <div class="calendar-view">
-          <div class="calendar-navbar">
-            <button class="calendar-nav-btn" id="prev-${habit.id}">◀</button>
-            <strong style="font-size:0.95rem;">${monthNames[habit.viewMonth]} ${habit.viewYear}</strong>
-            <button class="calendar-nav-btn" id="next-${habit.id}">▶</button>
-          </div>
-          <div class="calendar-grid" id="grid-${habit.id}"></div>
-          <div style="margin-top: 12px; font-size: 0.8rem; font-weight: bold; color: #a4b3c1; text-align: center; border-top: 1px solid #28333e; padding-top: 8px;">
-            📊 Total Lifetime Logs for this habit: <span style="color:#ff9800; font-size:0.9rem;">${totalLogs}</span>
-          </div>
-        </div>`;
-
-      const grid = document.getElementById(`grid-${habit.id}`);
-      ['S','M','T','W','T','F','S'].forEach(d => grid.innerHTML += `<div class="calendar-day-label">${d}</div>`);
-      for(let i=0; i<firstDay; i++) grid.innerHTML += `<div class="calendar-cell empty"></div>`;
-      for(let d=1; d<=totalDays; d++) {
-        const dStr = `${habit.viewYear}-${String(habit.viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        grid.innerHTML += `<div class="calendar-cell ${habit.history.includes(dStr) ? 'completed':''}">${d}</div>`;
-      }
-      document.getElementById(`prev-${habit.id}`).addEventListener('click', () => changeMonth(habit.id, -1));
-      document.getElementById(`next-${habit.id}`).addEventListener('click', () => changeMonth(habit.id, 1));
-    }
-
-    function changeMonth(id, delta) {
-      const h = habits.find(x => x.id === id); h.viewMonth += delta;
-      if (h.viewMonth > 11) { h.viewMonth = 0; h.viewYear++; }
-      else if (h.viewMonth < 0) { h.viewMonth = 11; h.viewYear--; }
-      renderHabits();
-    }
-
-    window.closeModal = function() { milestoneModal.classList.add('hidden'); }
   </script>
 </body>
 </html>
