@@ -501,6 +501,7 @@
     const db = getFirestore(app);
 
     // Dom Binding Registry
+				
     const authView = document.getElementById('auth-view');
     const dashboardView = document.getElementById('dashboard-view');
     const authTitle = document.getElementById('auth-title');
@@ -886,12 +887,12 @@
           const userProfileSnap = await getDoc(userProfileRef);
           
           if (userProfileSnap.exists()) {
-            myUsername = userProfileSnap.data().username || "user";
-            myFriendsList = userProfileSnap.data().friends || [];
-          } else {
-            myUsername = "user";
-            myFriendsList = [];
-          }
+        myUsername = userProfileSnap.data().username || user.email.split('@')[0] || "user";
+        myFriendsList = userProfileSnap.data().friends || [];
+    } else {
+        myUsername = user.email.split('@')[0] || "user";
+        myFriendsList = [];
+    }
           userDisplayHandle.innerText = `@${myUsername}`;
           dropdownUsernameTxt.innerText = `@${myUsername}`;
           await fetchHabitsFromCloud();
