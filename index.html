@@ -113,7 +113,7 @@
       width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #28333e; background-color: #11171d; color: white; font-size: 1rem; outline: none; box-sizing: border-box;
     }
 
-    /* Error Text Style */
+    /* Inline Validation Messages */
     .error-msg {
       color: #ff4b4b;
       font-size: 0.8rem;
@@ -298,7 +298,7 @@
           <form id="habit-form" class="flex-form">
             <div class="input-row">
               <input type="text" id="habit-input" placeholder="⚡ Enter new habit..." required>
-              <button type="submit" class="submit-action-btn">Add +</button>
+              <button type="submit" class="submit-action-btn" id="form-submit-btn">Add +</button>
             </div>
             <div class="meta-selectors">
               <div>
@@ -347,7 +347,7 @@
       <div style="font-size: 4.5rem; margin-bottom: 12px;">🏆</div>
       <h2 style="color: #ff9800; margin: 0 0 10px 0; font-size: 1.8rem;">MILESTONE CRUSHED!</h2>
       <p id="milestone-text" style="color: #f0f3f5; font-size: 1.1rem; line-height: 1.5; margin-bottom: 20px;"></p>
-      <button class="modal-close-btn" onclick="closeModal()">Keep It Up! 🔥</button>
+      <button class="modal-close-btn" id="modal-close-action">Keep It Up! 🔥</button>
     </div>
   </div>
 
@@ -408,6 +408,7 @@
 
     const habitForm = document.getElementById('habit-form');
     const habitInput = document.getElementById('habit-input');
+    const formSubmitBtn = document.getElementById('form-submit-btn');
     const habitEmojiSelect = document.getElementById('habit-emoji-select');
     const habitPrivacyCheck = document.getElementById('habit-privacy-check');
     const toggleArchiveViewBtn = document.getElementById('toggle-archive-view-btn');
@@ -420,6 +421,7 @@
 
     const milestoneModal = document.getElementById('milestone-modal');
     const milestoneText = document.getElementById('milestone-text');
+    const modalCloseAction = document.getElementById('modal-close-action');
 
     let habits = [];
     let currentUser = null;
@@ -430,7 +432,7 @@
 
     const MILESTONE_TIERS = [7, 21, 30, 70, 100, 150, 200, 300, 375, 500, 1000];
 
-    // Clear dynamic text messages on input entry
+    // Clear UI error markers automatically when writing
     [authEmail, authPassword].forEach(input => {
       if (input) {
         input.addEventListener('input', () => {
@@ -440,7 +442,7 @@
       }
     });
 
-    // Tab Navigation
+    // Tab Navigation Configuration
     tabHabits.addEventListener('click', () => {
       tabHabits.classList.add('active'); tabFriends.classList.remove('active');
       panelHabits.classList.remove('hidden'); panelSocial.classList.add('hidden');
@@ -495,36 +497,31 @@
     authForgotPswTrigger.addEventListener('click', async () => {
       const email = authEmail.value.trim();
       if (emailError) emailError.innerText = "";
-      if (passwordError) passwordError.innerText = "";
-
       if(!email) {
-        if (emailError) emailError.innerText = "Please enter an email address for password reset.";
+        if (emailError) emailError.innerText = "Please enter your email address to drop a reset link.";
         return;
       }
       try {
         await sendPasswordResetEmail(auth, email);
-        alert(`📬 Secure verification link sent to ${email}. Check your inbox or spam folder to update your password instantly!`);
+        alert(`📬 Secure verification link sent to ${email}. Check your inbox!`);
       } catch (e) {
-        if (emailError) emailError.innerText = "Could not process request: " + e.message;
+        if (emailError) emailError.innerText = e.message;
       }
     });
 
-    // Guest Authentication Execution
+    // Guest Authentication Initialization
     authGuestBtn.addEventListener('click', async () => {
       try {
         await signInAnonymously(auth);
       } catch(e) {
-        alert("Guest verification server failed: " + e.message);
+        alert("Guest verification system failure: " + e.message);
       }
     });
 
-    // Handle Profile Upgrade Triggering
     dropdownUpgradeAccountBtn.addEventListener('click', () => {
       avatarDropdownBox.classList.add('hidden');
       dashboardView.classList.add('hidden');
       authView.classList.remove('hidden');
-      
-      // Force panel context to sign-up configuration
       isLoginMode = false;
       authTitle.innerText = "Upgrade Guest Account";
       authSubmitBtn.innerText = "Secure Data & Upgrade";
@@ -533,6 +530,7 @@
       authForgotPswTrigger.classList.add('hidden');
     });
 
+    // Master Authentication Engine Integration
     authSubmitBtn.addEventListener('click', async () => {
       const email = authEmail.value.trim(); 
       const password = authPassword.value;
@@ -547,35 +545,28 @@
         if (!password && passwordError) passwordError.innerText = "Please enter your password.";
         return; 
       }
-      
       if (!isLoginMode) {
         if(!username) { alert("Please pick a unique username."); return; }
         if(password !== confirmPassword) { 
-          if (passwordError) passwordError.innerText = "Passwords do not match. Please verify."; 
+          if (passwordError) passwordError.innerText = "Passwords do not match."; 
           return; 
         }
       }
 
       try {
         if (isLoginMode) {
-          // Standard login logic
           await signInWithEmailAndPassword(auth, email, password);
         } else {
-          // Check username availability
           const nameCheck = await getDoc(doc(db, "usernames", username));
-          if(nameCheck.exists()) { alert("Username already taken! Choose another."); return; }
+          if(nameCheck.exists()) { alert("Username already taken!"); return; }
 
-          // Account Conversion / Upgrading Logic
           if(auth.currentUser && auth.currentUser.isAnonymous) {
-            const credential = EmailAuthProvider.credential(email, password);
-            await linkWithCredential(auth.currentUser, credential);
-            
+            await linkWithCredential(auth.currentUser, EmailAuthProvider.credential(email, password));
             myUsername = username;
             await setDoc(doc(db, "usernames", username), { uid: auth.currentUser.uid });
             await saveHabitsToCloud();
-            alert("🎉 Your guest profile and habits have been linked successfully to your new permanent account!");
+            alert("🎉 Your guest profile and habits have been linked successfully!");
           } else {
-            // Standard registration logic if no guest session exists
             myUsername = username;
             const credential = await createUserWithEmailAndPassword(auth, email, password);
             await setDoc(doc(db, "usernames", username), { uid: credential.user.uid });
@@ -583,17 +574,16 @@
           }
         }
       } catch (e) { 
-        console.error("Auth Exception Triggered:", e.code);
-        if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
-          if (passwordError) passwordError.innerText = "Incorrect password. Please try again.";
-        } else if (e.code === 'auth/invalid-email' || e.code === 'auth/user-not-found') {
-          if (emailError) emailError.innerText = "Invalid email address or profile not found.";
-        } else if (e.code === 'auth/email-already-in-use') {
+        if (e.code === 'auth/email-already-in-use') {
           if (emailError) emailError.innerText = "This email is already registered.";
+        } else if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+          if (passwordError) passwordError.innerText = "Incorrect email or password.";
+        } else if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-email') {
+          if (emailError) emailError.innerText = "No account found with this email.";
         } else if (e.code === 'auth/weak-password') {
-          if (passwordError) passwordError.innerText = "Password should be at least 6 characters.";
+          if (passwordError) passwordError.innerText = "Password must be at least 6 characters.";
         } else {
-          alert("Auth Error: " + e.message); 
+          alert("Error: " + e.message); 
         }
       }
     });
@@ -631,6 +621,7 @@
       }
     });
 
+    // Cloud Database Persistence Handlers
     async function saveHabitsToCloud() {
       if (!currentUser) return;
       try {
@@ -673,38 +664,326 @@
 
         updateUserLevelDisplay();
         renderHabits();
-      } else if (currentUser.isAnonymous) {
-        updateUserLevelDisplay();
-        renderHabits();
       }
     }
 
-    // Explicit function placeholders to protect truncation endpoints
+    // Dynamic Tracking Form Listener Engine
+    habitForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = habitInput.value.trim();
+      const selectedEmoji = habitEmojiSelect.value;
+      const makePrivate = habitPrivacyCheck.checked;
+
+      const newHabit = {
+        id: Date.now(),
+        name: text,
+        emoji: selectedEmoji,
+        streak: 0,
+        lastCompleted: null,
+        history: [],
+        isPrivate: makePrivate,
+        isArchived: false,
+        showEditor: false,
+        viewMonth: new Date().getMonth(),
+        viewYear: new Date().getFullYear()
+      };
+
+      habits.push(newHabit);
+      habitInput.value = '';
+      habitPrivacyCheck.checked = false;
+      saveHabitsToCloud();
+      renderHabits();
+    });
+
+    // Deep Render Interface for Main Control Elements
     function renderHabits() {
       if (!habitsList) return;
       habitsList.innerHTML = '';
+      
+      const today = new Date().setHours(0,0,0,0);
+      const oneDayInMs = 24 * 60 * 60 * 1000;
+
       habits.forEach(habit => {
         if(habit.isArchived && !showArchivedMode) return;
+
+        let statusMessage = "Keep the flame burning! 🔥";
+        let isDanger = false;
+
+        if (habit.lastCompleted) {
+          const lastDate = new Date(habit.lastCompleted).setHours(0,0,0,0);
+          const daysPassed = Math.floor((today - lastDate) / oneDayInMs);
+
+          if (daysPassed === 1) {
+            statusMessage = "⚠️ You missed yesterday! Protect your streak!";
+            isDanger = true;
+          } else if (daysPassed > 1) {
+            habit.streak = 0;
+            statusMessage = "Streak reset to 0. Fresh start today! 🌱";
+          } else if (daysPassed === 0) {
+            statusMessage = "✅ Completed for today! See you tomorrow!";
+          }
+        }
+
+        const nextMilestone = MILESTONE_TIERS.find(m => m > habit.streak) || 365;
+        const previousMilestone = [...MILESTONE_TIERS].reverse().find(m => m <= habit.streak) || 0;
+        const progressPercent = Math.min(100, Math.max(0, ((habit.streak - previousMilestone) / (nextMilestone - previousMilestone)) * 100));
+
         const card = document.createElement('div');
-        card.className = `habit-card ${habit.isArchived ? 'archived-state' : ''}`;
+        card.className = `habit-card ${habit.isArchived ? 'archived-state' : ''} ${isDanger ? 'danger' : ''}`;
+
+        const isDoneToday = habit.lastCompleted && new Date(habit.lastCompleted).setHours(0,0,0,0) === today;
+
         card.innerHTML = `
           <div class="habit-header">
             <span class="habit-title">${habit.emoji || '🎯'} ${habit.name}</span>
-            <span class="streak-badge">🔥 ${habit.streak || 0}</span>
+            <div class="status-badge-cluster">
+              ${habit.isPrivate ? '<span class="privacy-mini-icon">🔒</span>' : ''}
+              <span class="streak-badge">🔥 ${habit.streak}</span>
+            </div>
           </div>
-          <p class="motivation-msg">Keep up the streak!</p>
+          <p class="motivation-msg">${statusMessage}</p>
+          
+          <div class="milestone-container">
+            <div class="milestone-meta">
+              <span>Milestone progress</span>
+              <span>${habit.streak}/${nextMilestone} Days</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" style="width: ${progressPercent}%"></div>
+            </div>
+          </div>
+
+          <div class="habit-actions">
+            <button class="btn-complete ${isDoneToday ? 'checked' : ''}" data-id="${habit.id}" ${isDoneToday ? 'disabled' : ''}>
+              ${isDoneToday ? 'Done' : 'Complete'}
+            </button>
+            <button class="btn-edit" data-id="${habit.id}">Edit Options</button>
+            <button class="btn-calendar" data-id="${habit.id}">Calendar</button>
+          </div>
+
+          <div class="edit-panel hidden" id="editor-${habit.id}">
+            <div class="input-row">
+              <input type="text" id="edit-name-${habit.id}" value="${habit.name}">
+            </div>
+            <div class="edit-panel-actions-row">
+              <button class="btn-inline-save" data-id="${habit.id}">Save Changes</button>
+              <div class="edit-panel-danger-zone">
+                <button class="btn-inline-archive" data-id="${habit.id}">${habit.isArchived ? 'Unarchive' : 'Archive'}</button>
+                <button class="btn-inline-delete" data-id="${habit.id}">Delete</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="calendar-view hidden" id="calendar-${habit.id}">
+            <div class="calendar-navbar">
+              <button class="calendar-nav-btn prev-month" data-id="${habit.id}">◀</button>
+              <span style="font-weight:bold; color:white;" id="cal-month-lbl-${habit.id}"></span>
+              <button class="calendar-nav-btn next-month" data-id="${habit.id}">▶</button>
+            </div>
+            <div class="calendar-grid" id="cal-grid-${habit.id}"></div>
+          </div>
         `;
         habitsList.appendChild(card);
+        if(habit.showEditor) document.getElementById(`editor-${habit.id}`).classList.remove('hidden');
+        if(habit.showAnalytics) renderCalendarMatrix(habit);
       });
     }
 
-    if (friendSearchBtn) {
-      friendSearchBtn.addEventListener('click', () => {
-        if (currentUser && currentUser.isAnonymous) { 
-          alert("Social profiling options are unavailable for Guest Users. Secure your account profile!"); 
+    // Dynamic Element Click Management Router
+    document.addEventListener('click', (e) => {
+      const target = e.target;
+      const id = parseInt(target.getAttribute('data-id'));
+      if(!id) return;
+
+      const habit = habits.find(h => h.id === id);
+      if(!habit) return;
+
+      if(target.classList.contains('btn-complete')) {
+        habit.streak += 1;
+        const now = Date.now();
+        habit.lastCompleted = now;
+        if(!habit.history) habit.history = [];
+        habit.history.push(now);
+
+        if (MILESTONE_TIERS.includes(habit.streak)) {
+          milestoneText.innerText = `Your dedication to "${habit.name}" has reached a massive milestone of ${habit.streak} days in a row!`;
+          milestoneModal.classList.remove('hidden');
         }
+        saveHabitsToCloud();
+        renderHabits();
+      }
+      
+      else if(target.classList.contains('btn-edit')) {
+        habit.showEditor = !habit.showEditor;
+        document.getElementById(`editor-${habit.id}`).classList.toggle('hidden', !habit.showEditor);
+      }
+
+      else if(target.classList.contains('btn-inline-save')) {
+        const updatedName = document.getElementById(`edit-name-${habit.id}`).value.trim();
+        if(updatedName) {
+          habit.name = updatedName;
+          habit.showEditor = false;
+          saveHabitsToCloud();
+          renderHabits();
+        }
+      }
+
+      else if(target.classList.contains('btn-inline-archive')) {
+        habit.isArchived = !habit.isArchived;
+        habit.showEditor = false;
+        saveHabitsToCloud();
+        renderHabits();
+      }
+
+      else if(target.classList.contains('btn-inline-delete')) {
+        if(confirm("Are you sure you want to delete this habit permanently?")) {
+          habits = habits.filter(h => h.id !== id);
+          saveHabitsToCloud();
+          renderHabits();
+        }
+      }
+
+      else if(target.classList.contains('btn-calendar')) {
+        habit.showAnalytics = !habit.showAnalytics;
+        document.getElementById(`calendar-${habit.id}`).classList.toggle('hidden', !habit.showAnalytics);
+        if(habit.showAnalytics) renderCalendarMatrix(habit);
+      }
+
+      else if(target.classList.contains('prev-month')) {
+        habit.viewMonth--;
+        if(habit.viewMonth < 0) { habit.viewMonth = 11; habit.viewYear--; }
+        renderCalendarMatrix(habit);
+      }
+
+      else if(target.classList.contains('next-month')) {
+        habit.viewMonth++;
+        if(habit.viewMonth > 11) { habit.viewMonth = 0; habit.viewYear++; }
+        renderCalendarMatrix(habit);
+      }
+    });
+
+    // Monthly Completion Array Calculator Layout
+    function renderCalendarMatrix(habit) {
+      const monthLabel = document.getElementById(`cal-month-lbl-${habit.id}`);
+      const gridContainer = document.getElementById(`cal-grid-${habit.id}`);
+      if(!monthLabel || !gridContainer) return;
+
+      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      monthLabel.innerText = `${monthNames[habit.viewMonth]} ${habit.viewYear}`;
+      gridContainer.innerHTML = '';
+
+      const dayLabels = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+      dayLabels.forEach(d => {
+        const lbl = document.createElement('div');
+        lbl.className = 'calendar-day-label';
+        lbl.innerText = d;
+        gridContainer.appendChild(lbl);
       });
+
+      const firstDayIdx = new Date(habit.viewYear, habit.viewMonth, 1).getDay();
+      const totalDays = new Date(habit.viewYear, habit.viewMonth + 1, 0).getDate();
+
+      for (let i = 0; i < firstDayIdx; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'calendar-cell empty';
+        gridContainer.appendChild(emptyCell);
+      }
+
+      for (let day = 1; day <= totalDays; day++) {
+        const cell = document.createElement('div');
+        cell.className = 'calendar-cell';
+        cell.innerText = day;
+
+        const cellDateStr = new Date(habit.viewYear, habit.viewMonth, day).setHours(0,0,0,0);
+        const logicHistory = habit.history || [];
+        const checkedMatch = logicHistory.some(timestamp => new Date(timestamp).setHours(0,0,0,0) === cellDateStr);
+
+        if(checkedMatch) cell.classList.add('completed');
+        gridContainer.appendChild(cell);
+      }
     }
+
+    // Social Network Graph Interface Engine
+    friendSearchBtn.addEventListener('click', async () => {
+      if (currentUser.isAnonymous) { alert("Social networking profiles require account registration."); return; }
+      const targetQuery = friendSearchInput.value.trim().toLowerCase().replace('@', '');
+      searchResultsZone.innerHTML = `<p style='color:#6c7a86;'>Searching platform databases...</p>`;
+      if(targetQuery === myUsername) { searchResultsZone.innerHTML = `<p style='color:#ea4335;'>You cannot add yourself!</p>`; return; }
+
+      const nameDoc = await getDoc(doc(db, "usernames", targetQuery));
+      if(nameDoc.exists()) {
+        const targetUid = nameDoc.data().uid;
+        searchResultsZone.innerHTML = `
+          <div class="search-result-box">
+            <span style="font-weight:bold; color:white;">✨ @${targetQuery} Found!</span>
+            <button class="submit-action-btn" id="add-friend-exec-btn" style="padding: 6px 14px; height:auto;">Add +</button>
+          </div>
+        `;
+        document.getElementById('add-friend-exec-btn').addEventListener('click', async () => {
+          if(!myFriendsList.includes(targetUid)) {
+            myFriendsList.push(targetUid);
+            await saveHabitsToCloud();
+            const friendSnap = await getDoc(doc(db, "users_habits", targetUid));
+            if(friendSnap.exists()) {
+              const theirFriendsList = friendSnap.data().friends || [];
+              if(!theirFriendsList.includes(currentUser.uid)) {
+                theirFriendsList.push(currentUser.uid);
+                await updateDoc(doc(db, "users_habits", targetUid), { friends: theirFriendsList });
+              }
+            }
+            alert(`Added @${targetQuery} to your network connection list successfully!`);
+            friendSearchInput.value = '';
+            searchResultsZone.innerHTML = '';
+            loadFriendsListUI();
+          } else { alert("User profile link is already connected!"); }
+        });
+      } else { searchResultsZone.innerHTML = `<p style='color:#ea4335;'>No exact user handle profiles discovered.</p>`; }
+    });
+
+    async function loadFriendsListUI() {
+      if(!friendsListZone) return;
+      friendsListZone.innerHTML = `<p style="color:#6c7a86; margin-left:5px;">Querying active directory scores...</p>`;
+      if(myFriendsList.length === 0) { friendsListZone.innerHTML = `<p style="color:#6c7a86; margin-left:5px;">Your network list is currently empty. Connect with users above!</p>`; return; }
+
+      let mergedOutputHtml = "";
+      for(const friendUid of myFriendsList) {
+        const snap = await getDoc(doc(db, "users_habits", friendUid));
+        if(snap.exists()) {
+          const data = snap.data();
+          const fName = data.username || "User";
+          const fHabits = data.habits || [];
+          const score = fHabits.reduce((acc, h) => acc + (h.history ? h.history.length : 0), 0);
+          mergedOutputHtml += `
+            <div class="friend-row">
+              <div class="friend-info-block">
+                <span class="friend-name">@${fName}</span>
+                <div style="display:flex; flex-direction:column; gap:4px; margin-top:5px;">
+                  ${fHabits.filter(h => !h.isPrivate && !h.isArchived).map(h => `<span style="font-size:0.8rem; color:#a4b3c1;">${h.emoji || '🎯'} ${h.name} (${h.streak}d streak)</span>`).join('')}
+                </div>
+              </div>
+              <div class="friend-interactive-zone">
+                <span class="friend-score">${score} XP</span>
+                <button class="friend-remove-btn" data-remove-uid="${friendUid}">Drop</button>
+              </div>
+            </div>
+          `;
+        }
+      }
+      friendsListZone.innerHTML = mergedOutputHtml || `<p style="color:#6c7a86;">No profile connections are responsive.</p>`;
+    }
+
+    document.addEventListener('click', async (e) => {
+      const targetUid = e.target.getAttribute('data-remove-uid');
+      if(targetUid && e.target.classList.contains('friend-remove-btn')) {
+        if(confirm("Break network tracking connection with this profile user?")) {
+          myFriendsList = myFriendsList.filter(uid => uid !== targetUid);
+          await saveHabitsToCloud();
+          loadFriendsListUI();
+        }
+      }
+    });
+
+    modalCloseAction.addEventListener('click', () => milestoneModal.classList.add('hidden'));
   </script>
 </body>
 </html>
